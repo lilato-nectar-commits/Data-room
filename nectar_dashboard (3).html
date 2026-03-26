@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nectar Capital — Portfolio Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{--navy:#0B1628;--navy-mid:#13213A;--accent:#C9A84C;--purple:#7B5EA7;--green:#2ECC71;--red:#E74C3C;--amber:#F39C12;--text:#E8EDF5;--dim:#8A9BB8;--border:rgba(255,255,255,0.08);--card:rgba(255,255,255,0.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--navy);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-height:100vh;}
+header{background:linear-gradient(135deg,#0B1628,#13213A);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-family:'DM Serif Display',serif;font-size:21px;color:var(--accent);}
+.logo span{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dim);margin-left:10px;font-weight:300;}
+.hdr-right{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);text-align:right;line-height:1.6;}
+.main{padding:24px 28px;max-width:1600px;margin:0 auto;}
+.filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.fl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;}
+select{background:var(--navy-mid);border:1px solid var(--border);color:var(--text);padding:6px 26px 6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A9BB8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.pills{display:flex;gap:4px;}
+.pill{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.pill.active,.pill:hover{background:var(--accent);color:var(--navy);border-color:var(--accent);font-weight:600;}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.kpi-l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.kpi-v{font-family:'DM Serif Display',serif;font-size:21px;line-height:1;}
+.kpi-s{font-size:9px;color:var(--dim);margin-top:3px;font-family:'DM Mono',monospace;}
+.gold{color:var(--accent);}.green{color:var(--green);}
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.ct{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.ct::before{content:'';width:3px;height:11px;background:var(--accent);border-radius:2px;display:inline-block;}
+
+/* DEALS SPLIT */
+.deals-wrap{display:flex;gap:14px;align-items:flex-start;}
+.tbl-section{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;flex:1;min-width:0;}
+.tbl-hdr{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.tbl-title{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px;}
+.tbl-title::before{content:'';width:3px;height:11px;background:var(--purple);border-radius:2px;display:inline-block;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:8px 12px;text-align:left;font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--accent);}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;cursor:pointer;}
+tbody tr:hover{background:rgba(255,255,255,0.03);}
+tbody tr.sel{background:rgba(201,168,76,0.1)!important;border-left:3px solid var(--accent);}
+td{padding:8px 12px;font-size:11px;color:var(--text);white-space:nowrap;}
+td.mono{font-family:'DM Mono',monospace;font-size:10px;}
+td.dim{color:var(--dim);}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:600;}
+.b-open{background:rgba(46,204,113,0.15);color:#2ECC71;}
+.b-closed{background:rgba(138,155,184,0.15);color:#8A9BB8;}
+.b-watch{background:rgba(231,76,60,0.15);color:#E74C3C;}
+.b-pe{background:rgba(123,94,167,0.2);color:#B39DDB;}
+.b-cfa{background:rgba(201,168,76,0.2);color:#C9A84C;}
+.b-ra{background:rgba(52,152,219,0.2);color:#3498DB;}
+.pag{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:10px 16px;border-top:1px solid var(--border);}
+.pg-btn{padding:3px 9px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.pg-btn:hover,.pg-btn.active{border-color:var(--accent);color:var(--accent);}
+.pg-info{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;}
+.irr-bar{display:flex;align-items:center;gap:6px;}
+.irr-tr{width:50px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;}
+.irr-fi{height:100%;background:var(--accent);border-radius:2px;}
+
+/* ONE-PAGER */
+.op{width:420px;flex-shrink:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5);animation:sIn .2s ease;font-family:'DM Sans',sans-serif;color:#1a1a2e;max-height:88vh;overflow-y:auto;position:sticky;top:80px;}
+@keyframes sIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+.op-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid #eee;}
+.op-logo{font-family:'DM Serif Display',serif;font-size:16px;color:#7B5EA7;}
+.op-x{cursor:pointer;font-size:18px;color:#bbb;background:none;border:none;line-height:1;}
+.op-x:hover{color:#333;}
+.op-photo{width:100%;height:170px;background:linear-gradient(135deg,#1a1a3e,#2d2060);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
+.op-photo img{width:100%;height:100%;object-fit:cover;}
+.op-hb{padding:14px 16px 0;}
+.op-title{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:3px;}
+.op-sub{font-size:11px;color:#555;line-height:1.65;margin-bottom:3px;}
+.op-meta{font-size:10px;color:#aaa;margin-top:2px;}
+.op-mbar{background:#0B1628;padding:12px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.op-ml{font-size:8px;color:#8A9BB8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+.op-mv{font-family:'DM Serif Display',serif;font-size:18px;}
+.op-mv.gold{color:#C9A84C;}.op-mv.white{color:#fff;}.op-mv.grn{color:#2ECC71;}
+.op-body{padding:12px 16px;}
+.op-sec{margin-bottom:12px;}
+.op-st{font-size:10px;font-weight:700;color:#7B5EA7;border-bottom:1px solid #eee;padding-bottom:4px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;}
+.op-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.op-card{background:#f7f7fb;border-radius:7px;padding:10px 12px;}
+.op-ct{font-size:9px;font-weight:700;color:#333;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.op-card ul{padding-left:13px;margin:0;}
+.op-card li{font-size:10px;color:#444;line-height:1.75;}
+.op-card li b{color:#1a1a2e;}
+.op-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f2f2f2;font-size:10px;}
+.op-row:last-child{border:none;}
+.op-row span:first-child{color:#666;}
+.op-row span:last-child{font-weight:600;color:#1a1a2e;}
+.op-pmt{width:100%;border-collapse:collapse;font-size:10px;}
+.op-pmt th{background:#f0f0f7;padding:4px 8px;text-align:left;font-size:9px;color:#666;text-transform:uppercase;}
+.op-pmt td{padding:4px 8px;border-bottom:1px solid #f7f7f7;}
+.op-pmt tr:last-child td{border:none;}
+.paid{background:#e8faf0;color:#27ae60;padding:1px 5px;border-radius:3px;font-size:8px;font-weight:700;}
+.unpaid{background:#fff8e6;color:#e67e22;padding:1px 5px;border-radius:3px;font-size:8px;font-weight:700;}
+.op-foot{background:#0B1628;padding:9px 16px;text-align:center;font-size:9px;color:#8A9BB8;}
+.op-foot a{color:#C9A84C;text-decoration:none;}
+.prog-bar{height:4px;background:#eee;border-radius:2px;overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#7B5EA7,#C9A84C);}
+
+/* scenario */
+.scen-sec{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:20px;}
+.s-pill{padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;}
+.s-pill.bear.active{background:rgba(231,76,60,.2);border-color:var(--red);color:var(--red);}
+.s-pill.base.active{background:rgba(243,156,18,.2);border-color:var(--amber);color:var(--amber);}
+.s-pill.bull.active{background:rgba(46,204,113,.2);border-color:var(--green);color:var(--green);}
+.s-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:12px;}
+.s-met{background:rgba(255,255,255,.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border);}
+.s-ml{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+.s-mv{font-family:'DM Serif Display',serif;font-size:19px;}
+.cf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+footer{border-top:1px solid var(--border);padding:14px 28px;text-align:center;font-size:9px;color:var(--dim);}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">nectar <span>Portfolio Intelligence Dashboard</span></div></div>
+  <div class="hdr-right">As of March 2026 &nbsp;|&nbsp; Confidential — For Qualified Investors Only<br>RE Nectar Inc. &nbsp;|&nbsp; lilato@usenectar.com</div>
+</header>
+<div class="main">
+  <div class="filters">
+    <span class="fl">Filter</span>
+    <select id="fAsset" onchange="applyFilters()">
+      <option value="all">All Asset Types</option>
+      <option value="Multifamily">Multifamily</option>
+      <option value="Hotels">Hotels & Hospitality</option>
+      <option value="SFR">SFR</option>
+      <option value="Self-Storage">Self-Storage</option>
+      <option value="Mixed Use">Mixed Use</option>
+      <option value="Manufactured Housing">Manufactured Housing</option>
+    </select>
+    <select id="fStatus" onchange="applyFilters()">
+      <option value="all">All Statuses</option>
+      <option value="Open">Open</option>
+      <option value="Closed">Closed</option>
+    </select>
+    <select id="fType" onchange="applyFilters()">
+      <option value="all">All Financing Types</option>
+      <option value="Preferred Equity">Preferred Equity</option>
+      <option value="Cash Flow Assignment">Cash Flow Assignment</option>
+      <option value="Revenue Assignment">Revenue Assignment</option>
+    </select>
+    <select id="fVintage" onchange="applyFilters()">
+      <option value="all">All Vintages</option>
+      <option value="2022">2022</option><option value="2023">2023</option>
+      <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+    </select>
+    <div class="pills" style="margin-left:auto">
+      <button class="pill active" onclick="setView('summary',this)">Summary</button>
+      <button class="pill" onclick="setView('deals',this)">Deal Detail</button>
+      <button class="pill" onclick="setView('cashflow',this)">Cash Flow</button>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l">Total Deployed</div><div class="kpi-v gold" id="kD">—</div><div class="kpi-s" id="kDn">—</div></div>
+    <div class="kpi"><div class="kpi-l">Total Collected</div><div class="kpi-v" id="kC">—</div><div class="kpi-s" id="kCp">—</div></div>
+    <div class="kpi"><div class="kpi-l">Outstanding Principal</div><div class="kpi-v" id="kO">—</div><div class="kpi-s" id="kOp">—</div></div>
+    <div class="kpi"><div class="kpi-l">Avg Projected IRR</div><div class="kpi-v gold" id="kI">—</div><div class="kpi-s">open positions</div></div>
+    <div class="kpi"><div class="kpi-l">Avg DSCR</div><div class="kpi-v" id="kDS">—</div><div class="kpi-s">performing book</div></div>
+    <div class="kpi"><div class="kpi-l">Avg CLTV</div><div class="kpi-v" id="kLTV">—</div><div class="kpi-s">performing book</div></div>
+  </div>
+
+  <div id="vSum">
+    <div class="charts-row">
+      <div class="chart-card"><div class="ct">Deployed by Asset Type</div><canvas id="cAsset" height="200"></canvas></div>
+      <div class="chart-card"><div class="ct">Deployed by Vintage</div><canvas id="cVintage" height="200"></canvas></div>
+      <div class="chart-card"><div class="ct">IRR by Asset Type</div><canvas id="cIRR" height="200"></canvas></div>
+    </div>
+    <div class="charts-row" style="grid-template-columns:1fr 1fr">
+      <div class="chart-card"><div class="ct">Financing Type Mix</div><canvas id="cType" height="180"></canvas></div>
+      <div class="chart-card"><div class="ct">Collected vs Outstanding vs Projected</div><canvas id="cStack" height="180"></canvas></div>
+    </div>
+  </div>
+
+  <div id="vSumScen">
+    <div class="scen-sec">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="ct" style="margin:0">Return Scenario Analysis</div>
+        <div style="display:flex;gap:5px">
+          <button class="s-pill bear" onclick="setScen('bear',this)">Bear</button>
+          <button class="s-pill base active" onclick="setScen('base',this)">Base</button>
+          <button class="s-pill bull" onclick="setScen('bull',this)">Bull</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+        <div class="s-met"><div class="s-ml">Open Book Proj. IRR</div><div class="s-mv" style="color:var(--accent)">25.44%</div><div style="font-size:9px;color:var(--dim);margin-top:3px">Pre-haircut contractual</div></div>
+        <div class="s-met"><div class="s-ml">Closed Book Realized IRR</div><div class="s-mv" style="color:var(--green)">18.26%</div><div style="font-size:9px;color:var(--dim);margin-top:3px">Actual outcomes</div></div>
+        <div class="s-met" id="sActive"></div>
+      </div>
+      <div class="s-grid" id="sGrid"></div>
+    </div>
+  </div>
+
+  <div id="vDeals" style="display:none">
+    <div class="deals-wrap">
+      <div style="flex:1;min-width:0">
+        <div class="tbl-section">
+          <div class="tbl-hdr">
+            <div class="tbl-title">Deal-Level Detail</div>
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--dim)" id="tCount">—</div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr>
+                <th onclick="srt('id')">ID</th>
+                <th onclick="srt('name')">Borrower</th>
+                <th onclick="srt('asset')">Asset</th>
+                <th onclick="srt('city')">Location</th>
+                <th onclick="srt('type')">Structure</th>
+                <th onclick="srt('vintage')">Vintage</th>
+                <th onclick="srt('advance')">Advance</th>
+                <th onclick="srt('collected')">Collected</th>
+                <th onclick="srt('outstanding')">Outstanding</th>
+                <th onclick="srt('irr')">IRR</th>
+                <th onclick="srt('ltv')">CLTV</th>
+                <th onclick="srt('dscr')">DSCR</th>
+                <th onclick="srt('status')">Status</th>
+              </tr></thead>
+              <tbody id="tBody"></tbody>
+            </table>
+          </div>
+          <div class="pag" id="pag"></div>
+        </div>
+      </div>
+      <div id="opPanel" style="display:none"></div>
+    </div>
+  </div>
+
+  <div id="vCF" style="display:none">
+    <div class="cf-row">
+      <div class="chart-card"><div class="ct">Monthly Collections (Actual)</div><canvas id="cCFA" height="220"></canvas></div>
+      <div class="chart-card"><div class="ct">Projected Monthly Cash Flow</div><canvas id="cCFP" height="220"></canvas></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:20px">
+      <div class="ct">Cumulative Deployed vs Collected vs Projected</div>
+      <canvas id="cCum" height="160"></canvas>
+    </div>
+  </div>
+</div>
+<footer>CONFIDENTIAL — RE Nectar Inc. &nbsp;|&nbsp; Data as of March 2026 &nbsp;|&nbsp; For accredited investors only.</footer>
+
+<script>
+// ── MEMO DATA — extracted from uploaded investment memo PDFs ─────────────
+const MEMO = {
+  // Jacksonville Multifamily (pages 1-2) — matches deals in Jacksonville/St Augustine
+  "jax_mf": {
+    strength1:"Stable Operations — portfolio generates strong stabilized revenue with exceptional 86.3% NOI margins",
+    strength2:"Capital Structure — debt profile anchored by 30-year fixed-rate mortgages with manageable 78% combined LTV",
+    risk1:"Entity History — limited 1.5-year operating history",
+    risk2:"LTV elevated relative to purchase price",
+    mitigant1:"Sponsor has 7 years leading a private firm with 50+ completed deals and MBS analyst background",
+    mitigant2:"$30k cash balance and $14k in available credit maintained",
+    useOfFunds:"Renovation costs",city:"Jacksonville, FL",
+    desc:"3 Property LTR portfolio (two duplexes, one 8-multiunit) in Florida.",
+    imgSearch:"Jacksonville Florida multifamily brick apartment building",
+  },
+  // 18-89 Cornelia St (page 3)
+  "1127": {
+    strength1:"Attractive Valuation — conservative 66% LTV based on appraisal; current AVMs suggest improved 51% LTV with $1MM+ equity position",
+    strength2:"Strong Performance — 100% occupancy with locked-in 5% rent increases for 2023 and 2024",
+    risk1:"Cash Flow Management — variable bank balances",
+    risk2:"Older asset construction requiring ongoing maintenance",
+    mitigant1:"Strategic payment scheduling on the 9th, prior to senior debt service",
+    mitigant2:"Nectar-held expense reserve in place",
+    useOfFunds:"Renovation costs",city:"Ridgewood, NY",
+    desc:"Property in Ridgewood, New York. Acquired 2017, undergone ~$626,000 in renovations, 6 units offering three-bedroom floor plans.",
+    imgSearch:"Ridgewood Queens New York multifamily brownstone street",
+  },
+  // Prairie_Funsho — Chicago (page 4) — matches 4331 S PRAIRIE LLC
+  "1147": {
+    strength1:"Asset Quality — full gut rehabilitation ensuring property meets modern standards with minimal near-term capex",
+    strength2:"Liquidity — strong liquidity position with average cash balance of $10.9k relative to small deal size",
+    risk1:"Data Discrepancy — third-party data showed potential conflicting $1.8MM lien",
+    risk2:"Small deal size relative to Chicago market dynamics",
+    mitigant1:"Cook County Record Search confirmed clear title — lien was a reporting error",
+    mitigant2:"5 months cash reserve held by Nectar",
+    useOfFunds:"Additional acquisitions",city:"Chicago, IL",
+    desc:"Property in Chicago, Illinois. Acquired late 2019, underwent complete gut renovation, comprises 4 units.",
+    imgSearch:"Chicago Illinois multifamily greystone brownstone building evening",
+  },
+  // Single Family Home — Atlanta (page 5) — matches SFR deals
+  "atl_sfr": {
+    strength1:"Strong Cash Flow — $128.5k positive net cash flow over trailing 12 months",
+    strength2:"Market Strength — high-demand Atlanta market with attractive long-term fundamentals",
+    risk1:"Loan-to-Cost Basis — current loan balance ($1.72M) exceeds 2015 purchase price ($700k)",
+    risk2:"Single-asset STR concentration risk",
+    mitigant1:"Significant market appreciation confirmed by $2.8M appraisal supporting increased leverage",
+    mitigant2:"5 months cash reserve and PG protections",
+    useOfFunds:"Additional acquisitions",city:"Atlanta, GA",
+    desc:"Single-family home in Atlanta, Georgia. Four bedrooms and seven bathrooms with $128.5k TTM net cash flow.",
+    imgSearch:"Atlanta Georgia luxury single family home modern white",
+  },
+  // Momo 1988 — Maryland (page 6) — matches id 1154
+  "1154": {
+    strength1:"Strong Equity Coverage — $466k equity coverage vs $45k advance, >10x coverage ratio",
+    strength2:"Proven Growth — consistent track record acquiring and stabilizing cash-flowing properties",
+    risk1:"New Asset Class — move into STR represents new operational sector for sponsor",
+    risk2:"Part-time management focus during transition period",
+    mitigant1:"Extensive prior rental experience; advance conservatively sized on LTR performance only",
+    mitigant2:"One partner shifting to part-time employment to focus on STR operations",
+    useOfFunds:"Furnish STR",city:"Maryland",
+    desc:"8 LTR properties in Maryland (and 1 new STR) portfolio. Funds used for furnishing the new STR unit.",
+    imgSearch:"Maryland waterfront single family home rental property",
+  },
+  // 2405 Tilden Avenue — Brooklyn (page 7) — matches id 1183
+  "1183": {
+    strength1:"Tenant Stability — long-term tenant since 2017 with lease through 2028, guaranteed rent increases",
+    strength2:"Favorable expense structure — tenant responsible for utilities and non-structural repairs",
+    risk1:"Concentration Risk — single-tenant exposure",
+    risk2:"Liquidity — low spot cash balances noted",
+    mitigant1:"Proven payment history; apartments can be leased individually if lease cancelled",
+    mitigant2:"Lender-held expense reserves; amortization targets final payment before senior loan maturity",
+    useOfFunds:"Additional acquisitions",city:"Brooklyn, NY",
+    desc:"Located in Brooklyn, New York. Acquired June 2015, $450,000 in renovations, 6 units across three stories, constructed 1906.",
+    imgSearch:"Brooklyn New York 6 unit apartment building 1900s stone facade",
+  },
+  // 1823-1825 Cornelia St — Queens (page 8) — matches id 1184
+  "1184": {
+    strength1:"Operational Strength — 100% occupancy across both buildings with 76% NOI margin and 39.4% TTM NCF margin",
+    strength2:"Asset Value — $2.7M appraised value providing strong equity coverage",
+    risk1:"Liquidity Management — low spot cash balance ($79) and two NSF fees noted",
+    risk2:"Small cash buffer relative to payment obligations",
+    mitigant1:"Nectar-held expense reserve and six-month average balance of $6k",
+    mitigant2:"Sponsor's established track record of on-time payments on previous advances",
+    useOfFunds:"Additional acquisitions",city:"Queens, NY",
+    desc:"Two contiguous properties in Queens, NY totaling 12 units across three stories, constructed 1911, offering 2 and 3-bedroom floor plans.",
+    imgSearch:"Queens New York Ridgewood Bushwick 12 unit brick apartment building 1911",
+  },
+  // 107 Cornelia Street — Brooklyn (page 9) — matches id 1188
+  "1188": {
+    strength1:"Strong Margins — 84% NOI margins and 47% TTM Net Cash Flow (NCF) margins",
+    strength2:"Healthy Liquidity — average cash balance equal to 3x scheduled Nectar payment",
+    risk1:"Projected Cash Flow Compression — new debt service reduces projected NCF margins to 16.9%",
+    risk2:"Limited margin for revenue decline post-new debt",
+    mitigant1:"Breakeven analysis shows property withstands 10% revenue decline and still covers obligations",
+    mitigant2:"$2.6M asset value confirmed; 56.7% LTV provides strong equity cushion",
+    useOfFunds:"Additional acquisitions",city:"Brooklyn, NY",
+    desc:"Property in Brooklyn, NY. Three-story, 6 units constructed 1913, five units renovated. $2.6M asset value.",
+    imgSearch:"Brooklyn New York Cornelia Street 6 unit brick apartment building",
+  },
+  // Surdus Vacation Rentals — DC/Ocean City (page 10) — matches id 1190
+  "1190": {
+    strength1:"Operational Efficiency — 65% NOI and 26% Net Cash Flow margins across portfolio",
+    strength2:"Strong Sponsor — Airbnb Superhost with 7 years STR experience and 26-year rental ownership track record",
+    risk1:"Previous MCA Usage — sponsor has history of Merchant Cash Advance usage",
+    risk2:"STR revenue volatility across DC and Ocean City markets",
+    mitigant1:"Single outstanding MCA facility paid off prior to closing with strict funds holdback",
+    mitigant2:"4 months cash reserve held by Nectar",
+    useOfFunds:"Additional acquisitions",city:"Washington DC & Ocean City, MD",
+    desc:"Three STR properties in Washington DC and Ocean City, MD. Capital used to lease, furnish and prepare an additional unit for rental arbitrage.",
+    imgSearch:"Washington DC colonial rowhouse rental property flag",
+  },
+  // Mountain Brook Gardens — Poughkeepsie (page 15) — matches id 1243
+  "1243": {
+    strength1:"Property Performance — 96.5% occupancy with consistent strong cash flow",
+    strength2:"Strong Sponsor — 20+ years experience, 40+ properties, combined net worth $207MM, real estate holdings $449MM",
+    risk1:"Asset Age — built 1966, requires ongoing capital maintenance",
+    risk2:"Secondary market dynamics in Poughkeepsie, NY",
+    mitigant1:"~$3MM ($10,416/unit) invested in upgrades including unit renovations and common area amenities",
+    mitigant2:"3 months cash reserve and PG protections",
+    useOfFunds:"Capital improvements and general liquidity",city:"Poughkeepsie, NY",
+    desc:"Property in Poughkeepsie, New York. Acquired December 2019, ~$3MM in renovations, 288 units constructed 1966.",
+    imgSearch:"Poughkeepsie New York modern multifamily apartment complex renovation",
+  },
+  // 4400 Gaston — Dallas (page 16 & 28) — matches id 1245
+  "1245": {
+    strength1:"Location — Old East Dallas, historic charm with modern urban conveniences, high walkability, proximity to downtown",
+    strength2:"Strong Sponsor — 54 investment properties (140 units), $36.18MM value, LTV 58.05%, DSCR 2.62x",
+    risk1:"Asset Age — constructed 1929",
+    risk2:"Older building systems may require capital expenditure",
+    mitigant1:"~$506,000 invested in renovations including kitchen appliances, flooring, interior painting, lighting and fixtures",
+    mitigant2:"3 months cash reserve; located 0.5 miles from 1,000-bed Baylor University Medical Center",
+    useOfFunds:"Capital improvements and general liquidity",city:"Dallas, TX",
+    desc:"Property in Dallas, Texas. Acquired 2022, ~$506,000 in renovations, 16 units constructed 1929 in Old East Dallas.",
+    imgSearch:"Dallas Texas Old East Dallas historic 16 unit apartment building 1929 stone",
+  },
+  // Blue Mountain Property Group — Dallas (page 17) — matches id 1246
+  "1246": {
+    strength1:"Location — Knox-Henderson neighborhood of East Dallas, adjacent to affluent Highland Park, excellent Highway 75 connectivity",
+    strength2:"Strong Sponsor — 54 properties (140 units), $36.18MM value, conservative LTV 58.05%, DSCR 2.62x",
+    risk1:"Asset Age — constructed 1984 requiring ongoing maintenance",
+    risk2:"Submarket vacancy headwinds in Dallas market",
+    mitigant1:"~$519,000 in renovations since January 2024 acquisition",
+    mitigant2:"Property outperforming market at 95% occupancy vs 18.1% submarket vacancy",
+    useOfFunds:"Capital improvements and general liquidity",city:"Dallas, TX",
+    desc:"Property in Dallas, Texas. Acquired January 2024, ~$519,000 in renovations, 11 units constructed 1984 in Knox-Henderson.",
+    imgSearch:"Dallas Texas Knox Henderson multifamily modern apartment building",
+  },
+  // 1200 Louise Street — Thibodaux (page 18) — matches id 1249
+  "1249": {
+    strength1:"Strong Occupancy & Operations — 96.8% occupancy (only 1 vacancy), tech-enabled management via AppFolio",
+    strength2:"Proven Capital Reinvestment — ~$138k invested since acquisition preserving asset value",
+    risk1:"Management Structure — 32-unit asset operates without on-site staffing",
+    risk2:"Smaller secondary market in Thibodaux, Louisiana",
+    mitigant1:"Local maintenance oversight presence and digital-first maintenance request system",
+    mitigant2:"Sustained 96%+ occupancy evidences effectiveness of lean management model",
+    useOfFunds:"Capital improvements and general liquidity",city:"Thibodaux, LA",
+    desc:"Property in Thibodaux, Louisiana. Acquired December 2023, $138,000 in renovations, 32 units offering 2 and 3-bedroom floor plans.",
+    imgSearch:"Thibodaux Louisiana multifamily apartment complex pool",
+  },
+  // Golden Union — Irvington NJ (page 19) — matches id 1257
+  "1257": {
+    strength1:"Strong Sponsor — 20+ years experience, 40+ properties, combined net worth $199MM, $683MM in real estate holdings",
+    strength2:"Stable Market — Northern NJ mid-90s occupancy with steady positive rental growth",
+    risk1:"Asset Age — built 1921",
+    risk2:"Older building systems and potential deferred maintenance",
+    mitigant1:"Substantial $2.6MM ($50k/unit) full gut renovation completed by current sponsorship",
+    mitigant2:"2 months cash reserve; repeat Nectar client with proven performance record",
+    useOfFunds:"Capital improvements and general liquidity",city:"Irvington, NJ",
+    desc:"Property in Irvington, New Jersey. Acquired September 2012, $2.6MM in renovations, 52 units across four stories.",
+    imgSearch:"Irvington New Jersey multifamily brick apartment building Newark",
+  },
+  // Pagewood Apartments — Odessa TX (page 20) — matches id 1272
+  "1272": {
+    strength1:"Strong Sponsor — acquired over $500MM in commercial real estate; $40MM independently since 2018; NOI grown from $28.5k to $44.8k/month",
+    strength2:"Competitive Positioning — larger-than-average unit sizes, carports, washer/dryer connections, 1 mile from UT Permian Basin",
+    risk1:"Asset Age — constructed 1970 with minimal updates historically",
+    risk2:"Oil & gas market dependency in Odessa/Permian Basin economy",
+    mitigant1:"~$42,000 in renovations; strong occupancy outperforms market due to unit amenities and location",
+    mitigant2:"3 months cash reserve; PG and Right to Sell protections",
+    useOfFunds:"Acquisitions and general liquidity",city:"Odessa, TX",
+    desc:"Located in Odessa, Texas. Acquired October 2024, ~$42,000 in renovations, 48 units constructed 1970.",
+    imgSearch:"Odessa Texas apartment complex 1970s single story carport",
+  },
+  // 568 Jefferson Ave — Brooklyn (page 21) — matches id 1273
+  "1273": {
+    strength1:"Strong Sponsor — seasoned NYC investor, net worth $17.4MM, portfolio of 27 multifamily properties totaling 323 units",
+    strength2:"Location — Stuyvesant Heights, Brooklyn with A/C subway access to Manhattan; ongoing gentrification supports rising rents",
+    risk1:"Asset Age — built circa 1910 requiring continued capital attention",
+    risk2:"NYC regulatory complexity and rent stabilization exposure",
+    mitigant1:"$1.8MM in capital improvements since 2021 acquisition — units meet modern standards",
+    mitigant2:"3 months cash reserve; PG and Right to Sell protections",
+    useOfFunds:"Acquisitions and general liquidity",city:"Brooklyn, NY",
+    desc:"Located in Brooklyn, New York. Acquired January 2021, $1.8MM in renovations, 4 units across 4 stories.",
+    imgSearch:"Stuyvesant Heights Brooklyn New York multifamily brownstone 4 unit",
+  },
+  // 1716 Linden St — Ridgewood (page 22) — matches id 1275
+  "1275": {
+    strength1:"Strong Sponsor — seasoned NYC investor, net worth $17.4MM, portfolio of 27 multifamily properties totaling 323 units",
+    strength2:"Location — Ridgewood, Queens with L and M subway access to Manhattan; gentrification supports stable rising income",
+    risk1:"Asset Age — built circa 1930",
+    risk2:"NYC regulatory environment and rent stabilization exposure",
+    mitigant1:"$756k capital investment since May 2021 acquisition — fully modernized to meet modern standards",
+    mitigant2:"3 months cash reserve held by Nectar; PG and Right to Sell protections",
+    useOfFunds:"Acquisitions and general liquidity",city:"Ridgewood, NY",
+    desc:"Located in Ridgewood, New York. Acquired May 2021, $756k in renovations, 6 units across 3 stories.",
+    imgSearch:"Ridgewood Queens New York multifamily brick building L train",
+  },
+  // LJ El Paso Properties (page 23) — matches id 1262
+  "1262": {
+    strength1:"Strong Sponsor — repeat Nectar sponsors with diverse real estate portfolio and excellent payment history",
+    strength2:"Asset Age — $1.6MM in renovations since 2019 including flooring, appliances, bathroom enhancements; 90%+ occupancy",
+    risk1:"Absentee Owner — sponsors reside in Phoenix, AZ MSA while property is in El Paso",
+    risk2:"Management continuity risk in geographically distant market",
+    mitigant1:"Highly competent local management team in place for 5+ years maintaining 90%+ occupancy",
+    mitigant2:"Consistent rent growth since acquisition; 3 months cash reserve",
+    useOfFunds:"Acquisitions and general liquidity",city:"El Paso, TX",
+    desc:"Property in El Paso, Texas. Acquired 2019, $1.6MM in renovations, 100-unit complex across two stories offering 2, 3, and 4-bedroom plans.",
+    imgSearch:"El Paso Texas multifamily apartment complex 2 story beige stucco",
+  },
+  // TYS Hospitality — Alcoa TN (page 25) — matches id 1270
+  "1270": {
+    strength1:"Asset Quality — constructed 2020, well-maintained with fitness center, appealing lobby/gathering area, hot breakfast daily",
+    strength2:"New construction quality — acquired shortly after construction, minimal deferred maintenance",
+    risk1:"Legal Issues — sponsor entered Settlement Agreement with lender on unrelated Kentucky hotel property",
+    risk2:"Cash Flow Management — bank account reflects 9 NSF days in past 6 months; negative balance of $36k at June end",
+    mitigant1:"Settlement Agreement resolved; matter did not involve any Nectar properties",
+    mitigant2:"6 months cash reserve held by Nectar provides strong payment buffer",
+    useOfFunds:"Acquisitions and general liquidity",city:"Alcoa, TN",
+    desc:"86-key, four-story hotel in Alcoa (Blount County), Tennessee. Constructed December 2021 for $9.2MM. Offers fitness center, lobby, and hot breakfast.",
+    imgSearch:"Tru by Hilton hotel Tennessee modern 4 story",
+  },
+  // Ephant Group Morristown (page 26) — matches id 1268
+  "1268": {
+    strength1:"Asset Quality — constructed 2020, very good condition with breakfast area, pool, and meeting space for 50",
+    strength2:"Location — along Interstate 81, less than one hour drive to Knoxville",
+    risk1:"Tertiary Market — Morristown located ~44 miles northeast of Knoxville CBD; not part of Knoxville MSA",
+    risk2:"Cash Flow Management — 13 NSF days in past 6 months, generally related to understaffing",
+    mitigant1:"Part of Knoxville Combined Statistical Area; I-81 location drives consistent transient demand",
+    mitigant2:"6 months cash reserve held by Nectar; 2.49x cash flow coverage ratio",
+    useOfFunds:"Acquisitions and general liquidity",city:"Morristown, TN",
+    desc:"75-key, three-story Holiday Inn Express in Morristown, Tennessee. Constructed 2020, acquired December 2022 for $9.2MM.",
+    imgSearch:"Holiday Inn Express Morristown Tennessee hotel exterior",
+  },
+  // Ephant Group HI Knoxville (page 27) — matches id 1269
+  "1269": {
+    strength1:"Location — interchange of Interstate 40/75 and Cedar Bluff Road, A-location corridor for commercial/residential/office",
+    strength2:"Largest meeting space in West Knoxville with two restaurants — drives group and corporate demand",
+    risk1:"Asset Age — constructed 1970s, over 50 years old",
+    risk2:"Only 1 NSF day in past 6 months — within Nectar guidelines but worth monitoring",
+    mitigant1:"Property well maintained; 222 rooms with largest meeting space in West Knoxville",
+    mitigant2:"Excellent I-40/75 interchange location supports consistent demand",
+    useOfFunds:"Acquisitions and general liquidity",city:"Knoxville, TN",
+    desc:"Property in Knoxville, Tennessee. Renovated 2015, $500k in renovations, 222-unit hotel complex at I-40/75 interchange.",
+    imgSearch:"Holiday Inn Knoxville Tennessee Cedar Bluff hotel exterior",
+  },
+  // Ephant Group HIE Gatlinburg (page 37) — matches id 1263
+  "1263": {
+    strength1:"Asset Quality — built 2016, completed IHG-required PIP, strong curb appeal, competitive among downtown Gatlinburg properties",
+    strength2:"Tourism-driven market — positive cash flow in 10 of 12 months with strong seasonal performance",
+    risk1:"Tertiary Market — rural mountain community of Gatlinburg driven by tourism seasonality",
+    risk2:"Seasonal revenue variability creates uneven monthly cash flows",
+    mitigant1:"$600K PIP investment completed; 113-key Holiday Inn Express in prime downtown Gatlinburg location",
+    mitigant2:"2.54x cash flow coverage ratio provides significant buffer during slower months",
+    useOfFunds:"Acquisitions and general liquidity",city:"Gatlinburg, TN",
+    desc:"113-key, four-story Holiday Inn Express in Gatlinburg, TN. Built 2016, acquired February 2023 for $28MM. Completed IHG-required PIP.",
+    imgSearch:"Holiday Inn Express Gatlinburg Tennessee mountain hotel night",
+  },
+  // LJ Tempe Buttes — Phoenix (page 29) — matches id 1244
+  "1244": {
+    strength1:"Strong Sponsor — repeat Nectar sponsors with diverse portfolio and excellent payment history",
+    strength2:"Location — near I-10, 3.7 miles from Sky Harbor Airport, 7.5 miles from Phoenix CBD; 95% occupancy outperforming 18.1% submarket vacancy",
+    risk1:"Asset Age — constructed 1973–1984 with market vacancy headwinds",
+    risk2:"CoStar reported submarket vacancy at 18.1% as of December 2024",
+    mitigant1:"Renovations in most units including modern appliances, updated flooring, and bathroom fixtures",
+    mitigant2:"Subject Property outperforming market at 95% occupancy; projected to improve to 13.8% by end 2025",
+    useOfFunds:"Acquisitions and general liquidity",city:"Phoenix, AZ",
+    desc:"89-unit apartment community in Phoenix, Arizona near I-10. Constructed 1973–1984 with renovated units. 95% occupancy outperforming market.",
+    imgSearch:"Phoenix Arizona multifamily apartment complex 2 story desert landscaping",
+  },
+  // Golden Clinton — Irvington NJ (page 30) — matches id 1252
+  "1252": {
+    strength1:"Strong Sponsor — 20+ years experience, $199MM combined net worth, $1MM liquidity, $683MM in real estate holdings, repeat Nectar client",
+    strength2:"Stable Market — Northern NJ mid-90s occupancy with consistent rent growth",
+    risk1:"Asset Age — constructed 1920s",
+    risk2:"19-unit building requiring ongoing capital management",
+    mitigant1:"~$2MM ($105,263/unit) full gut renovation significantly improved marketability",
+    mitigant2:"3 months cash reserve; PG and Right to Sell protections",
+    useOfFunds:"Acquisitions and general liquidity",city:"Irvington, NJ",
+    desc:"19-unit, four-story building in Irvington, New Jersey. ~$2MM invested in full gut rehab.",
+    imgSearch:"Irvington New Jersey multifamily 4 story brick apartment building",
+  },
+  // 18th Ave Urban Renewal — Irvington NJ (page 31) — matches id 1253
+  "1253": {
+    strength1:"Strong Sponsor — 20+ years experience, 40+ properties, $199MM combined net worth, $683MM real estate assets, repeat Nectar client",
+    strength2:"Location — Northern NJ market, stable mid-90s occupancy with consistent rent growth",
+    risk1:"Asset Age — built 1920s",
+    risk2:"Larger 47-unit building requiring comprehensive management infrastructure",
+    mitigant1:"$4.5MM ($76K/unit) full gut renovation completed — new kitchens, bathrooms, flooring, and finishes",
+    mitigant2:"3 months cash reserve; repeat Nectar client with strong performance record",
+    useOfFunds:"Acquisitions and general liquidity",city:"Irvington, NJ",
+    desc:"47-unit, four-story building in Irvington, NJ (Essex County). Acquired 2014, $3.8MM in full gut rehab.",
+    imgSearch:"Irvington New Jersey 47 unit four story brick apartment renovation",
+  },
+  // Golden Avenue — Irvington NJ (page 32) — matches id 1255
+  "1255": {
+    strength1:"Strong Sponsor — 20+ years experience, 40+ properties, $199MM combined net worth, $683MM real estate assets",
+    strength2:"Stable Market — Northern NJ mid-90s occupancy, consistent rent growth over past year",
+    risk1:"Asset Age — built 1920s requiring continued upkeep",
+    risk2:"Dense urban market with competition from renovated comparable buildings",
+    mitigant1:"$4.15MM ($76K/unit) full gut renovation under current sponsorship",
+    mitigant2:"3 months cash reserve; repeat Nectar client with strong performance record",
+    useOfFunds:"Acquisitions and general liquidity",city:"Irvington, NJ",
+    desc:"48-unit, four-story building in Irvington, NJ (Essex County). Acquired 2009, $4.15MM in full gut rehab.",
+    imgSearch:"Irvington New Jersey multifamily brick apartment building Essex County",
+  },
+  // Golden Summit — Irvington NJ (page 33) — matches id 1256
+  "1256": {
+    strength1:"Strong Sponsor — 20+ years experience, 40+ properties, $199MM combined net worth, $683MM real estate assets",
+    strength2:"Location — Northern NJ, stable mid-90s occupancy with consistent rent growth",
+    risk1:"Asset Age — built 1920s",
+    risk2:"33-unit concentration in single building",
+    mitigant1:"$4.15MM ($76K/unit) full gut renovation significantly enhancing marketability",
+    mitigant2:"3 months cash reserve; repeat Nectar client with strong performance",
+    useOfFunds:"Acquisitions and general liquidity",city:"Irvington, NJ",
+    desc:"33-unit, four-story building in Irvington, NJ (Essex County). Acquired 2013, $3.4MM in full gut rehab.",
+    imgSearch:"Irvington NJ multifamily apartment building street level",
+  },
+  // Golden Orange — East Orange NJ (page 34) — matches id 1254
+  "1254": {
+    strength1:"Strong Sponsor — 20+ years experience, 40+ properties, $199MM combined net worth, $683MM real estate assets generating $9.8MM annually",
+    strength2:"Location — Northern NJ market with stable mid-90s occupancy and consistent rent growth",
+    risk1:"Asset Age — built 1920s in East Orange, NJ",
+    risk2:"59-unit building requiring significant operational oversight",
+    mitigant1:"$4.5MM ($76K/unit) full gut renovation significantly enhancing marketability and competitiveness",
+    mitigant2:"3 months cash reserve; repeat Nectar client with strong performance record",
+    useOfFunds:"Acquisitions and general liquidity",city:"East Orange, NJ",
+    desc:"59-unit, four-story building in East Orange, NJ (Essex County). Acquired 2011, $4.5MM in full gut rehab.",
+    imgSearch:"East Orange New Jersey multifamily apartment building modern renovation",
+  },
+  // 3130 Apartments — Bryan TX (page 35) — matches id 1278
+  "1278": {
+    strength1:"Strong Sponsor — 2,374 units throughout Texas, avg 95.7% occupancy, 1.77x DSCR, net worth $127.5MM, $10.5MM liquid",
+    strength2:"Location — Bryan-College Station metro anchored by Texas A&M University (72,000 students), stable 6.9% vacancy rate Q1 2025",
+    risk1:"Asset Age — built 1983 on 8.67-acre parcel",
+    risk2:"Market dependent on university enrollment and institutional demand",
+    mitigant1:"~$2MM ($11,627/unit) in upgrades under current sponsorship including new exterior paint and interior enhancements",
+    mitigant2:"3 months cash reserve; PG and Right to Sell protections",
+    useOfFunds:"Acquisitions and general liquidity",city:"Bryan, TX",
+    desc:"272-unit multifamily property in Bryan, TX. Built 1983, acquired March 2022 for $14MM, $2MM in capex invested.",
+    imgSearch:"Bryan Texas multifamily apartment complex green pool 272 units",
+  },
+  // CV The Roxy — Medford OR (page 36) — matches id 1260
+  "1260": {
+    strength1:"Strong Sponsor — Oregon-based, 5,000+ unit portfolio across Pacific Northwest valued over $750MM",
+    strength2:"Location — Riverside Avenue, Medford; 0.4 miles from I-5 at Garfield, 3 grocery stores within 0.8 miles",
+    risk1:"Asset Age — built 1960, renovated after 2021 acquisition",
+    risk2:"Units require kitchenette upgrades to maximize rental income potential",
+    mitigant1:"~$7.08MM in renovations since acquisition including kitchenettes, new showers, toilets, and vanities",
+    mitigant2:"Units can function as studio apartments if needed; 3 months cash reserve",
+    useOfFunds:"Acquisitions and general liquidity",city:"Medford, OR",
+    desc:"Property acquired February 2021 for $4.85MM ($39,112/unit). ~$7.08MM in renovations. Located on Riverside Avenue, Medford.",
+    imgSearch:"Medford Oregon multifamily apartment 2 story motel conversion",
+  },
+  // CIG Manager 215 — Virginia Beach (page 38) — matches id 1238
+  "1238": {
+    strength1:"Strong Sponsor — 893 residential units across 11 multifamily properties, 10 commercial properties and 18 land parcels",
+    strength2:"Location — Virginia Beach along N Witchduck Road near Virginia Beach Blvd, convenient to employment, healthcare, and I-264",
+    risk1:"Asset Age — Subject properties constructed 1963",
+    risk2:"Older building systems requiring ongoing capital investment",
+    mitigant1:"Sponsor acquired in 2022 and invested $20,000 per unit in CapEx",
+    mitigant2:"2 months cash reserve; professional property manager, leasing agent and maintenance team in place",
+    useOfFunds:"Acquisitions and general liquidity",city:"Virginia Beach, VA",
+    desc:"215 units across subject properties in Virginia Beach, VA. Mix of 1, 2, and 3-bedroom units with professional on-site management team.",
+    imgSearch:"Virginia Beach multifamily apartment complex pool 1960s renovated",
+  },
+  // 296 Manager Lucas Creek — Newport News (page 40) — matches id 1235
+  "1235": {
+    strength1:"Strong Sponsor — founder of Community Investment Group, 3,400+ units in Southeast, liquidity $3.2MM, net worth $134MM",
+    strength2:"Location — Newport News, convenient to employment centers, healthcare, and I-64 throughout Hampton Roads",
+    risk1:"Asset Age — constructed 1979, previously renovated 2001",
+    risk2:"Older asset requiring continued capital investment",
+    mitigant1:"Capital investment provided since July 2020 acquisition",
+    mitigant2:"6 months cash reserve held by Nectar; 1.51x cash flow coverage ratio",
+    useOfFunds:"Acquisitions and general liquidity",city:"Newport News, VA",
+    desc:"Autumn Lakes — 296-unit apartment community in Newport News, VA. 15.71-acre parcel with 24 residential buildings, pool, community center, and playground.",
+    imgSearch:"Newport News Virginia apartment complex winter pool Autumn Lakes",
+  },
+};
+
+// ── DASHBOARD DATA ────────────────────────────────────────────────────────
+const RAW = [
+  {id:"1284",lpid:"",name:"RBG Pine Associates LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2026,advance:1000000,collected:31666.67,outstanding:973389.35,monthlyPmt:15833.33,irr:21.0,ltv:71.46,dscr:2.15,status:"Open",term:12,fundDate:"2026-01",city:""},
+  {id:"1283",lpid:"",name:"Boudinot Ohio Limited Partnership",asset:"Multifamily",type:"Preferred Equity",vintage:2026,advance:250000,collected:13437.12,outstanding:241666.66,monthlyPmt:6718.56,irr:23.0,ltv:64.9,dscr:2.58,status:"Open",term:60,fundDate:"2026-01",city:""},
+  {id:"1281",lpid:"",name:"537 EdgeCombe LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:500000,collected:24999.99,outstanding:500000,monthlyPmt:8333.33,irr:22.9,ltv:72.41,dscr:1.23,status:"Open",term:12,fundDate:"2025-11",city:""},
+  {id:"1275",lpid:"",name:"1716 Linden St LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:365000,collected:33154.15,outstanding:365000,monthlyPmt:6630.83,irr:23.6,ltv:57.34,dscr:1.18,status:"Open",term:12,fundDate:"2025-10",city:"Ridgewood, NY"},
+  {id:"1278",lpid:"",name:"3130 Apartments Investment LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:1500000,collected:125000,outstanding:1500000,monthlyPmt:25000,irr:20.0,ltv:70.92,dscr:1.18,status:"Open",term:12,fundDate:"2025-10",city:""},
+  {id:"1273",lpid:"",name:"568 Jefferson Ave LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:450000,collected:41250,outstanding:450000,monthlyPmt:8250,irr:24.4,ltv:65.53,dscr:1.37,status:"Open",term:12,fundDate:"2025-09",city:""},
+  {id:"1272",lpid:"",name:"Pagewood Apartments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:455000,collected:48499.98,outstanding:455000,monthlyPmt:8083.33,irr:27.2,ltv:74.84,dscr:1.25,status:"Open",term:12,fundDate:"2025-09",city:""},
+  {id:"1268",lpid:"",name:"Ephant Group - Morristown Inc",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2025,advance:550000,collected:142091.64,outstanding:443549,monthlyPmt:23681.94,irr:25.0,ltv:52.77,dscr:1.41,status:"Open",term:31,fundDate:"2025-08",city:"Morristown, NJ"},
+  {id:"1269",lpid:"",name:"Ephant Group - HI Knoxville, LLC",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2025,advance:1100000,collected:174039.02,outstanding:1028260,monthlyPmt:29006.52,irr:26.0,ltv:47.65,dscr:1.47,status:"Open",term:46,fundDate:"2025-08",city:"Knoxville, TN"},
+  {id:"1270",lpid:"",name:"TYS Hospitality, LLC",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2025,advance:172000,collected:79833.78,outstanding:103200,monthlyPmt:13305.63,irr:25.0,ltv:60.84,dscr:1.5,status:"Open",term:15,fundDate:"2025-08",city:""},
+  {id:"1263",lpid:"",name:"Ephant Group - HIE Gatlinburg, LLC",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2025,advance:1000000,collected:226830.76,outstanding:867737,monthlyPmt:28583.33,irr:27.0,ltv:73.3,dscr:1.64,status:"Open",term:60,fundDate:"2025-06",city:"Gatlinburg, TN"},
+  {id:"1262",lpid:"",name:"LJ El Paso Properties LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:500000,collected:99500,outstanding:458333,monthlyPmt:12437.5,irr:24.0,ltv:55.62,dscr:1.44,status:"Open",term:48,fundDate:"2025-06",city:"El Paso, TX"},
+  {id:"1259",lpid:"",name:"3130 Apartments Investment LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:700000,collected:781165.22,outstanding:0,monthlyPmt:18666.67,irr:22.6,ltv:73.32,dscr:1.2,status:"Closed",term:60,fundDate:"2025-06",city:""},
+  {id:"1260",lpid:"",name:"CV The Roxy LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:920000,collected:262890,outstanding:747500,monthlyPmt:29210,irr:25.1,ltv:57.18,dscr:1.35,status:"Open",term:48,fundDate:"2025-06",city:""},
+  {id:"1243",lpid:"",name:"Mountain Brook Gardens LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:1500000,collected:493499.94,outstanding:1200000,monthlyPmt:41125,irr:24.0,ltv:71.26,dscr:1.42,status:"Open",term:60,fundDate:"2025-02",city:""},
+  {id:"1228",lpid:"",name:"Pine Bluff Investments II, LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2024,advance:2300000,collected:829150.11,outstanding:1763325,monthlyPmt:59225,irr:20.3,ltv:49.23,dscr:1.25,status:"Open",term:60,fundDate:"2024-12",city:""},
+  {id:"1226",lpid:"",name:"SeekStays LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:1060000,collected:465256.17,outstanding:785270,monthlyPmt:30029.12,irr:27.0,ltv:62.76,dscr:1.82,status:"Open",term:60,fundDate:"2024-11",city:""},
+  {id:"1223",lpid:"",name:"Dakota Flats LLC",asset:"Hotels & Hospitality",type:"Preferred Equity",vintage:2024,advance:620000,collected:252542.65,outstanding:463141,monthlyPmt:16636.67,irr:22.99,ltv:22.14,dscr:1.75,status:"Open",term:60,fundDate:"2024-11",city:""},
+  {id:"1222",lpid:"",name:"Tzadik Mount Rushmore Hotel, LLC",asset:"Hotels & Hospitality",type:"Preferred Equity",vintage:2024,advance:1000000,collected:390000,outstanding:741379,monthlyPmt:26000,irr:19.7,ltv:63.94,dscr:1.28,status:"Open",term:58,fundDate:"2024-11",city:""},
+  {id:"1213",lpid:"",name:"Manchester Oaks Apartments, LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:500000,collected:302424.33,outstanding:302083,monthlyPmt:15917.07,irr:25.0,ltv:61.46,dscr:1.33,status:"Open",term:48,fundDate:"2024-08",city:""},
+  {id:"1208",lpid:"",name:"Grand Pointe Apartments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:1500000,collected:799583.29,outstanding:1104167,monthlyPmt:42083.33,irr:24.63,ltv:55.7,dscr:1.25,status:"Open",term:36,fundDate:"2024-08",city:""},
+  {id:"1212",lpid:"",name:"The Royal Ledges LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:1500000,collected:2006485.77,outstanding:0,monthlyPmt:36875,irr:23.59,ltv:61.64,dscr:1.27,status:"Closed",term:48,fundDate:"2024-08",city:""},
+  {id:"1194",lpid:"",name:"Crystal Downs MHC- Michigan, LLC",asset:"Manufactured Housing",type:"Preferred Equity",vintage:2024,advance:268000,collected:182351.59,outstanding:165142,monthlyPmt:7928.33,irr:28.83,ltv:79.73,dscr:1.34,status:"Open",term:60,fundDate:"2024-03",city:"Michigan"},
+  {id:"1181",lpid:"",name:"Indiana Portfolio I LLC",asset:"Self-Storage",type:"Preferred Equity",vintage:2023,advance:550000,collected:415683.27,outstanding:302500,monthlyPmt:15395.67,irr:25.0,ltv:57.56,dscr:1.29,status:"Open",term:60,fundDate:"2023-11",city:"Indiana"},
+  {id:"1182",lpid:"",name:"Oak Park Realty LLC",asset:"SFR",type:"Preferred Equity",vintage:2023,advance:440000,collected:464609.25,outstanding:110000,monthlyPmt:17207.75,irr:27.06,ltv:78.39,dscr:1.4,status:"Open",term:36,fundDate:"2023-11",city:""},
+  {id:"1178",lpid:"",name:"Wolfe Pintus Puritas LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:545000,collected:209771.64,outstanding:452488,monthlyPmt:13730.97,irr:26.35,ltv:68.2,dscr:1.24,status:"Open",term:60,fundDate:"2023-11",city:""},
+  {id:"1174",lpid:"",name:"Chicory Lake Dallas LP",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:550000,collected:206487.85,outstanding:426872,monthlyPmt:15372.71,irr:25.0,ltv:59.25,dscr:1.35,status:"Open",term:60,fundDate:"2023-10",city:"Dallas, TX"},
+  {id:"1187",lpid:"",name:"Max Properties I LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:510000,collected:496799.72,outstanding:203963,monthlyPmt:15052.73,irr:26.44,ltv:73.37,dscr:1.32,status:"Open",term:55,fundDate:"2023-12",city:""},
+  // Memo-enriched deals (LP IDs match)
+  {id:"1056",lpid:"1056",name:"Nomad Hospitality LLC",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2022,advance:306378,collected:353866,outstanding:46183,monthlyPmt:11574,irr:23.56,ltv:42.02,dscr:1.63,status:"Open",term:36,fundDate:"2022-08",city:"Jacksonville Beach, FL"},
+  {id:"1059",lpid:"1059",name:"1320 1st St. N. LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:25812,collected:35101,outstanding:0,monthlyPmt:975,irr:23.56,ltv:75.91,dscr:1.13,status:"Closed",term:37,fundDate:"2022-08",city:"Jacksonville Beach, FL"},
+  {id:"1060",lpid:"",name:"1334 1st St. N. LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:49314,collected:67068,outstanding:0,monthlyPmt:1863,irr:23.56,ltv:82.6,dscr:1.34,status:"Closed",term:37,fundDate:"2022-08",city:"Jacksonville Beach, FL"},
+  {id:"1061",lpid:"1061",name:"Lina Management",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:10212,collected:13474,outstanding:2819,monthlyPmt:310,irr:30.4,ltv:73.48,dscr:1.26,status:"Open",term:60,fundDate:"2022-07",city:"Catskills, NY"},
+  {id:"1062",lpid:"1062",name:"Lina Management (Portfolio)",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:337120,collected:444945,outstanding:92976,monthlyPmt:10240,irr:30.4,ltv:73.48,dscr:1.26,status:"Open",term:60,fundDate:"2022-07",city:"Catskills, NY"},
+  {id:"1067",lpid:"1067",name:"CNHL Management Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:257214,collected:301370,outstanding:0,monthlyPmt:21159,irr:19.45,ltv:65.45,dscr:2.3,status:"Closed",term:16,fundDate:"2022-06",city:"Galveston, TX"},
+  {id:"1068",lpid:"1068",name:"GKYJ Holding Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:198453,collected:232520,outstanding:0,monthlyPmt:16325,irr:19.45,ltv:65.45,dscr:2.3,status:"Closed",term:16,fundDate:"2022-06",city:"Galveston, TX"},
+  {id:"1069",lpid:"",name:"CNHL Management Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:178569,collected:209219,outstanding:0,monthlyPmt:14689,irr:19.45,ltv:65.45,dscr:2.3,status:"Closed",term:16,fundDate:"2022-06",city:"Galveston, TX"},
+  {id:"1070",lpid:"",name:"CNHL Management Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:195846,collected:229469,outstanding:0,monthlyPmt:16111,irr:19.45,ltv:65.45,dscr:2.3,status:"Closed",term:16,fundDate:"2022-06",city:"Galveston, TX"},
+  {id:"1071",lpid:"",name:"CNHL Management Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:169918,collected:199090,outstanding:0,monthlyPmt:13978,irr:19.45,ltv:65.45,dscr:2.3,status:"Closed",term:16,fundDate:"2022-06",city:"Galveston, TX"},
+  {id:"1077",lpid:"",name:"Pendleton & Thornton Places LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:45896,collected:19430,outstanding:0,monthlyPmt:1272,irr:24.53,ltv:0,dscr:1.35,status:"Closed",term:60,fundDate:"2022-03",city:""},
+  {id:"1079",lpid:"",name:"JC Ventures LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:68858,collected:86728,outstanding:0,monthlyPmt:1953,irr:25.9,ltv:75.76,dscr:1.25,status:"Closed",term:60,fundDate:"2022-04",city:""},
+  {id:"1080",lpid:"",name:"GKB Investments LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:40703,collected:43551,outstanding:13970,monthlyPmt:1105,irr:23.32,ltv:81.51,dscr:1.54,status:"Open",term:60,fundDate:"2022-04",city:""},
+  {id:"1082",lpid:"",name:"iReal Now LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:29982,collected:43801,outstanding:4995,monthlyPmt:876,irr:27.66,ltv:57.03,dscr:1.12,status:"Open",term:60,fundDate:"2022-01",city:""},
+  {id:"1083",lpid:"",name:"Sole Proprietor - Jafroodi",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:168563,collected:218072,outstanding:33427,monthlyPmt:4534,irr:22.74,ltv:78.06,dscr:1.78,status:"Open",term:60,fundDate:"2022-03",city:""},
+  {id:"1085",lpid:"",name:"Ka Hale Aloha Maui LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:102155,collected:131070,outstanding:29934,monthlyPmt:3090,irr:30.13,ltv:79.83,dscr:1.99,status:"Open",term:60,fundDate:"2022-08",city:"Maui, HI"},
+  {id:"1086",lpid:"",name:"Ka Hale Aloha Maui LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:70254,collected:75862,outstanding:0,monthlyPmt:2679,irr:24.28,ltv:74.42,dscr:1.99,status:"Closed",term:36,fundDate:"2022-05",city:"Maui, HI"},
+  {id:"1093",lpid:"",name:"15 16th Ave N LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:253604,collected:287155,outstanding:81120,monthlyPmt:7037,irr:25.0,ltv:65.0,dscr:1.29,status:"Open",term:60,fundDate:"2022-10",city:""},
+  {id:"1097",lpid:"",name:"120 10th Ave N. LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:100000,collected:159160,outstanding:0,monthlyPmt:2787,irr:25.0,ltv:62.24,dscr:1.24,status:"Closed",term:60,fundDate:"2022-11",city:""},
+  {id:"1099",lpid:"",name:"1202 Triplex Jax Bch LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:75000,collected:83043,outstanding:25332,monthlyPmt:2090,irr:25.0,ltv:52.05,dscr:1.32,status:"Open",term:60,fundDate:"2022-11",city:"Jacksonville Beach, FL"},
+  {id:"1100",lpid:"",name:"2061 Forbes St LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:75000,collected:82555,outstanding:25624,monthlyPmt:2090,irr:25.0,ltv:55.0,dscr:1.52,status:"Open",term:60,fundDate:"2022-11",city:""},
+  {id:"1102",lpid:"",name:"Joe Dar Properties LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:125000,collected:80013,outstanding:0,monthlyPmt:3715,irr:29.0,ltv:16.0,dscr:1.32,status:"Closed",term:60,fundDate:"2022-12",city:""},
+  {id:"1103",lpid:"",name:"Robert Koehler Enterprises LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:100000,collected:142423,outstanding:0,monthlyPmt:2926,irr:27.0,ltv:80.01,dscr:1.78,status:"Closed",term:60,fundDate:"2022-12",city:""},
+  {id:"1104",lpid:"",name:"Lam Real Estate Properties LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:75000,collected:78194,outstanding:26613,monthlyPmt:2020,irr:22.0,ltv:77.0,dscr:1.63,status:"Open",term:60,fundDate:"2022-12",city:""},
+  {id:"1105",lpid:"",name:"830 LaSalle Street LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2022,advance:90000,collected:98799,outstanding:32173,monthlyPmt:2563,irr:26.56,ltv:66.51,dscr:1.3,status:"Open",term:60,fundDate:"2022-12",city:""},
+  {id:"1109",lpid:"",name:"Joe Dar Properties LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2022,advance:734780,collected:463258,outstanding:0,monthlyPmt:18071,irr:23.0,ltv:70.0,dscr:1.25,status:"Closed",term:72,fundDate:"2022-12",city:""},
+  {id:"1110",lpid:"",name:"CNHL Management Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:111000,collected:128461,outstanding:0,monthlyPmt:8825,irr:19.32,ltv:57.79,dscr:2.3,status:"Closed",term:17,fundDate:"2023-01",city:"Galveston, TX"},
+  {id:"1111",lpid:"",name:"GKYJ Holding Company",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:358000,collected:414296,outstanding:0,monthlyPmt:28461,irr:19.32,ltv:57.79,dscr:2.3,status:"Closed",term:17,fundDate:"2023-01",city:"Galveston, TX"},
+  {id:"1114",lpid:"",name:"Peak Investment Capital LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:33608,collected:46404,outstanding:0,monthlyPmt:1289,irr:25.0,ltv:65.18,dscr:1.19,status:"Closed",term:36,fundDate:"2023-01",city:""},
+  {id:"1117",lpid:"",name:"Robert Koehler Enterprises LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:100000,collected:79528,outstanding:55471,monthlyPmt:2977,irr:29.0,ltv:80.01,dscr:1.71,status:"Open",term:60,fundDate:"2023-02",city:""},
+  {id:"1119",lpid:"",name:"Seattle Vacation Home LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:280000,collected:580462,outstanding:0,monthlyPmt:11001,irr:27.0,ltv:51.93,dscr:1.19,status:"Closed",term:36,fundDate:"2023-02",city:"Seattle, WA"},
+  {id:"1120",lpid:"",name:"Duke 125 West 138th LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:250000,collected:352400,outstanding:851,monthlyPmt:9822,irr:27.0,ltv:73.67,dscr:1.6,status:"Open",term:36,fundDate:"2023-02",city:"New York, NY"},
+  {id:"1121",lpid:"",name:"E-OLA Enterprise LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:45781,collected:52713,outstanding:11445,monthlyPmt:1464,irr:25.5,ltv:78.33,dscr:1.14,status:"Open",term:48,fundDate:"2023-03",city:""},
+  {id:"1123",lpid:"",name:"Bushwick Portfolio LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:75000,collected:74624,outstanding:31849,monthlyPmt:2162,irr:27.0,ltv:59.78,dscr:1.14,status:"Open",term:60,fundDate:"2023-03",city:"Brooklyn, NY"},
+  {id:"1124",lpid:"",name:"271 Malcolm X Blvd LLC",asset:"Mixed Use",type:"Cash Flow Assignment",vintage:2023,advance:70000,collected:70085,outstanding:29796,monthlyPmt:2034,irr:27.03,ltv:63.8,dscr:1.32,status:"Open",term:60,fundDate:"2023-03",city:"New York, NY"},
+  {id:"1126",lpid:"",name:"SeekStays LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:125000,collected:183663,outstanding:0,monthlyPmt:3608,irr:26.2,ltv:76.38,dscr:1.71,status:"Closed",term:60,fundDate:"2023-03",city:""},
+  {id:"1127",lpid:"",name:"18-89 Cornelia Street LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:41000,collected:41979,outstanding:17676,monthlyPmt:1230,irr:29.0,ltv:67.39,dscr:1.16,status:"Open",term:60,fundDate:"2023-03",city:"New York, NY"},
+  {id:"1128",lpid:"",name:"SV 1201 Homestead LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:300000,collected:477155,outstanding:0,monthlyPmt:8597,irr:26.0,ltv:77.5,dscr:1.14,status:"Closed",term:60,fundDate:"2023-04",city:""},
+  {id:"1129",lpid:"",name:"Seattle Vacation Home LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:250000,collected:425157,outstanding:0,monthlyPmt:7461,irr:29.55,ltv:53.74,dscr:1.09,status:"Closed",term:60,fundDate:"2023-04",city:"Seattle, WA"},
+  {id:"1133",lpid:"",name:"Jungle House LLC",asset:"Multifamily",type:"Revenue Assignment",vintage:2023,advance:159000,collected:156849,outstanding:68900,monthlyPmt:4611,irr:27.19,ltv:21.8,dscr:1.26,status:"Open",term:60,fundDate:"2023-04",city:""},
+  {id:"1136",lpid:"",name:"534 East 14 LLC",asset:"Mixed Use",type:"Cash Flow Assignment",vintage:2023,advance:200000,collected:273567,outstanding:7963,monthlyPmt:7914,irr:27.0,ltv:35.4,dscr:1.26,status:"Open",term:36,fundDate:"2023-04",city:"New York, NY"},
+  {id:"1138",lpid:"",name:"The Paia Place Trust",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2023,advance:375000,collected:141853,outstanding:0,monthlyPmt:10595,irr:26.14,ltv:52.17,dscr:1.2,status:"Closed",term:60,fundDate:"2023-05",city:"Maui, HI"},
+  {id:"1139",lpid:"",name:"Seashore Properties LLC",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2023,advance:375000,collected:142159,outstanding:0,monthlyPmt:10595,irr:26.14,ltv:48.65,dscr:1.65,status:"Closed",term:60,fundDate:"2023-05",city:""},
+  {id:"1140",lpid:"",name:"Paia Life LLC",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2023,advance:375000,collected:142159,outstanding:0,monthlyPmt:10595,irr:26.14,ltv:53.62,dscr:1.11,status:"Closed",term:60,fundDate:"2023-05",city:"Maui, HI"},
+  {id:"1141",lpid:"",name:"The Paia Pad Trust",asset:"Hotels & Hospitality",type:"Cash Flow Assignment",vintage:2023,advance:375000,collected:141546,outstanding:0,monthlyPmt:10595,irr:26.14,ltv:54.64,dscr:1.04,status:"Closed",term:60,fundDate:"2023-05",city:"Maui, HI"},
+  {id:"1143",lpid:"",name:"568 Jefferson Ave LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:294000,collected:482536,outstanding:0,monthlyPmt:8742,irr:29.0,ltv:57.29,dscr:1.19,status:"Closed",term:60,fundDate:"2023-05",city:""},
+  {id:"1145",lpid:"",name:"SeekStays LLC",asset:"SFR",type:"Revenue Assignment",vintage:2023,advance:150000,collected:191872,outstanding:0,monthlyPmt:4438,irr:29.0,ltv:80.75,dscr:1.09,status:"Closed",term:60,fundDate:"2023-06",city:""},
+  {id:"1146",lpid:"",name:"1716 Linden St LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:150000,collected:218744,outstanding:0,monthlyPmt:4386,irr:25.2,ltv:65.38,dscr:1.12,status:"Closed",term:56,fundDate:"2023-06",city:"Ridgewood, NY"},
+  {id:"1147",lpid:"",name:"4331 S PRAIRIE LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:78000,collected:73134,outstanding:35100,monthlyPmt:2216,irr:27.0,ltv:84.27,dscr:1.26,status:"Open",term:60,fundDate:"2023-06",city:"Chicago, IL"},
+  {id:"1148",lpid:"",name:"4907 W Potomac LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:28000,collected:39465,outstanding:0,monthlyPmt:796,irr:27.0,ltv:80.37,dscr:1.18,status:"Closed",term:60,fundDate:"2023-06",city:"Chicago, IL"},
+  {id:"1150",lpid:"",name:"Fierman Development LLC",asset:"SFR",type:"Preferred Equity",vintage:2023,advance:122855,collected:114644,outstanding:57332,monthlyPmt:3583,irr:28.0,ltv:65.97,dscr:1.29,status:"Open",term:60,fundDate:"2023-07",city:""},
+  {id:"1154",lpid:"",name:"Momo 1988 LLC",asset:"SFR",type:"Cash Flow Assignment",vintage:2023,advance:45500,collected:55533,outstanding:6319,monthlyPmt:1791,irr:27.0,ltv:78.42,dscr:1.24,status:"Open",term:36,fundDate:"2023-07",city:""},
+  {id:"1155",lpid:"",name:"3501 NHC LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:240000,collected:266633,outstanding:0,monthlyPmt:22213,irr:21.6,ltv:74.16,dscr:1.56,status:"Closed",term:12,fundDate:"2023-07",city:""},
+  {id:"1158",lpid:"",name:"Damn Fine LLC",asset:"Hotels & Hospitality",type:"Preferred Equity",vintage:2023,advance:247000,collected:298001,outstanding:0,monthlyPmt:12417,irr:21.4,ltv:20.32,dscr:1.32,status:"Closed",term:24,fundDate:"2023-09",city:""},
+  {id:"1159",lpid:"",name:"WMF 2020 Mgmt LLC",asset:"Multifamily",type:"Revenue Assignment",vintage:2023,advance:235000,collected:97037,outstanding:176250,monthlyPmt:6469,irr:25.0,ltv:61.04,dscr:1.5,status:"Open",term:60,fundDate:"2023-09",city:""},
+  {id:"1161",lpid:"",name:"Wolfe Madewell 2017 Mgmt LLC",asset:"Multifamily",type:"Revenue Assignment",vintage:2023,advance:200000,collected:82580,outstanding:150003,monthlyPmt:5506,irr:25.0,ltv:63.25,dscr:1.63,status:"Open",term:60,fundDate:"2023-09",city:""},
+  {id:"1162",lpid:"",name:"Mountain Oak Lake LLC",asset:"SFR",type:"Preferred Equity",vintage:2023,advance:110000,collected:156026,outstanding:0,monthlyPmt:3051,irr:25.5,ltv:64.92,dscr:1.3,status:"Closed",term:60,fundDate:"2023-09",city:""},
+  {id:"1163",lpid:"",name:"1949 Orchard LLC",asset:"SFR",type:"Preferred Equity",vintage:2023,advance:155000,collected:219854,outstanding:0,monthlyPmt:4299,irr:25.5,ltv:67.72,dscr:1.46,status:"Closed",term:60,fundDate:"2023-09",city:""},
+  {id:"1164",lpid:"",name:"Misty Alpine LLC",asset:"SFR",type:"Preferred Equity",vintage:2023,advance:100000,collected:142018,outstanding:0,monthlyPmt:2777,irr:25.5,ltv:48.28,dscr:1.26,status:"Closed",term:60,fundDate:"2023-09",city:""},
+  {id:"1165",lpid:"",name:"Roam Grace LLC",asset:"SFR",type:"Preferred Equity",vintage:2023,advance:48000,collected:39962,outstanding:24000,monthlyPmt:1332,irr:25.5,ltv:85.04,dscr:2.33,status:"Open",term:60,fundDate:"2023-09",city:""},
+  {id:"1166",lpid:"",name:"Wolfe CRE 2022 Manager LLC",asset:"Multifamily",type:"Revenue Assignment",vintage:2023,advance:250000,collected:103294,outstanding:187500,monthlyPmt:6886,irr:25.0,ltv:52.58,dscr:1.51,status:"Open",term:60,fundDate:"2023-09",city:""},
+  {id:"1168",lpid:"",name:"Quays at Glendale SPE LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:330000,collected:232151,outstanding:198488,monthlyPmt:9381,irr:26.0,ltv:60.78,dscr:1.2,status:"Open",term:60,fundDate:"2023-09",city:"Glendale, AZ"},
+  {id:"1169",lpid:"",name:"6120 Route 44 LLC",asset:"Hotels & Hospitality",type:"Preferred Equity",vintage:2023,advance:70170,collected:76236,outstanding:0,monthlyPmt:10891,irr:26.7,ltv:79.88,dscr:1.31,status:"Closed",term:7,fundDate:"2023-09",city:""},
+  {id:"1171",lpid:"",name:"Wolfe Old Boston LP",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:550000,collected:808322,outstanding:0,monthlyPmt:15263,irr:25.0,ltv:51.51,dscr:1.25,status:"Closed",term:33,fundDate:"2023-10",city:""},
+  {id:"1172",lpid:"",name:"Wolfe Sumrok LBC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:420000,collected:711115,outstanding:0,monthlyPmt:11556,irr:25.0,ltv:46.87,dscr:1.16,status:"Closed",term:38,fundDate:"2023-10",city:""},
+  {id:"1173",lpid:"",name:"Wolfe Kirby LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2023,advance:430000,collected:568662,outstanding:75505,monthlyPmt:10051,irr:24.99,ltv:52.31,dscr:1.13,status:"Open",term:60,fundDate:"2023-10",city:""},
+  {id:"1183",lpid:"",name:"2405 Tilden Ave LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:60000,collected:44661,outstanding:33900,monthlyPmt:1711,irr:27.12,ltv:65.51,dscr:1.12,status:"Open",term:60,fundDate:"2023-12",city:"New York, NY"},
+  {id:"1184",lpid:"",name:"1823-1825 Cornelia Street LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:117500,collected:93142,outstanding:64625,monthlyPmt:3450,irr:29.0,ltv:77.9,dscr:1.26,status:"Open",term:60,fundDate:"2023-12",city:"New York, NY"},
+  {id:"1185",lpid:"",name:"Jungle House LLC",asset:"Multifamily",type:"Revenue Assignment",vintage:2023,advance:42570,collected:16139,outstanding:32489,monthlyPmt:598,irr:26.41,ltv:48.8,dscr:1.26,status:"Open",term:60,fundDate:"2023-12",city:""},
+  {id:"1188",lpid:"",name:"107 Cornelia Street Holdings LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2023,advance:36500,collected:27394,outstanding:20683,monthlyPmt:1054,irr:27.12,ltv:59.54,dscr:1.13,status:"Open",term:60,fundDate:"2023-12",city:"New York, NY"},
+  {id:"1189",lpid:"",name:"SeekStays LLC",asset:"SFR",type:"Revenue Assignment",vintage:2024,advance:236853,collected:271882,outstanding:0,monthlyPmt:6516,irr:29.3,ltv:73.92,dscr:1.1,status:"Closed",term:60,fundDate:"2024-01",city:""},
+  {id:"1190",lpid:"",name:"Surdus Vacation Rentals LLC",asset:"Multifamily",type:"Revenue Assignment",vintage:2024,advance:96000,collected:77598,outstanding:56000,monthlyPmt:3104,irr:35.0,ltv:77.4,dscr:1.32,status:"Open",term:60,fundDate:"2024-01",city:""},
+  {id:"1191",lpid:"",name:"SeekStays LLC",asset:"SFR",type:"Revenue Assignment",vintage:2024,advance:105000,collected:118501,outstanding:0,monthlyPmt:3100,irr:29.19,ltv:73.79,dscr:1.31,status:"Closed",term:60,fundDate:"2024-02",city:""},
+  {id:"1192",lpid:"",name:"MarMain (JV) LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:450000,collected:17186,outstanding:0,monthlyPmt:17188,irr:24.83,ltv:64.29,dscr:1.14,status:"Closed",term:36,fundDate:"2024-02",city:""},
+  {id:"1193",lpid:"",name:"MarMain (JV) LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:550000,collected:395313,outstanding:286458,monthlyPmt:17188,irr:24.03,ltv:64.81,dscr:1.21,status:"Open",term:48,fundDate:"2024-03",city:""},
+  {id:"1196",lpid:"",name:"Jungle House LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2024,advance:200000,collected:135880,outstanding:119999,monthlyPmt:5662,irr:26.5,ltv:84.81,dscr:2.17,status:"Open",term:60,fundDate:"2024-04",city:""},
+  {id:"1198",lpid:"",name:"537 EdgeCombe LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:240000,collected:344706,outstanding:0,monthlyPmt:6580,irr:27.08,ltv:69.25,dscr:1.23,status:"Closed",term:56,fundDate:"2024-04",city:"New York, NY"},
+  {id:"1199",lpid:"",name:"Cole Gardens LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:430000,collected:226569,outstanding:333507,monthlyPmt:10299,irr:23.53,ltv:71.99,dscr:1.21,status:"Open",term:47,fundDate:"2024-05",city:""},
+  {id:"1200",lpid:"",name:"Oak Park Apartments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:480000,collected:216001,outstanding:398162,monthlyPmt:10800,irr:24.25,ltv:75.97,dscr:1.21,status:"Open",term:60,fundDate:"2024-05",city:""},
+  {id:"1202",lpid:"",name:"778 Franklin Ave LLC",asset:"Mixed Use",type:"Preferred Equity",vintage:2024,advance:193000,collected:123385,outstanding:122233,monthlyPmt:5608,irr:27.74,ltv:34.77,dscr:1.24,status:"Open",term:60,fundDate:"2024-05",city:""},
+  {id:"1203",lpid:"",name:"Legacy Pointe LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:625000,collected:732920,outstanding:0,monthlyPmt:13802,irr:23.05,ltv:59.0,dscr:1.32,status:"Closed",term:60,fundDate:"2024-05",city:""},
+  {id:"1204",lpid:"",name:"Mill Pond I LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:700000,collected:820871,outstanding:0,monthlyPmt:15458,irr:23.05,ltv:74.27,dscr:1.18,status:"Closed",term:60,fundDate:"2024-05",city:""},
+  {id:"1205",lpid:"",name:"Encore Apartments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:925000,collected:1084722,outstanding:0,monthlyPmt:20427,irr:23.05,ltv:78.69,dscr:1.18,status:"Closed",term:60,fundDate:"2024-05",city:""},
+  {id:"1207",lpid:"",name:"15-19 Broad Street LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:220000,collected:100542,outstanding:188333,monthlyPmt:5292,irr:24.5,ltv:61.26,dscr:1.26,status:"Open",term:33,fundDate:"2024-07",city:""},
+  {id:"1209",lpid:"",name:"171 Oakwood LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:210000,collected:147963,outstanding:126875,monthlyPmt:7788,irr:25.17,ltv:71.38,dscr:1.28,status:"Open",term:12,fundDate:"2024-07",city:""},
+  {id:"1211",lpid:"",name:"EPT 5249 Wren Ave LP",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:500000,collected:92500,outstanding:500000,monthlyPmt:6250,irr:22.04,ltv:67.65,dscr:1.2,status:"Open",term:12,fundDate:"2024-08",city:""},
+  {id:"1215",lpid:"",name:"Garden Villas Apartments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:400000,collected:122520,outstanding:325000,monthlyPmt:13613,irr:23.13,ltv:66.51,dscr:1.23,status:"Open",term:22,fundDate:"2024-09",city:""},
+  {id:"1216",lpid:"",name:"Tzadik Hidden Hills Apartments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:500000,collected:35602,outstanding:0,monthlyPmt:17801,irr:23.01,ltv:68.3,dscr:1.21,status:"Closed",term:22,fundDate:"2024-09",city:""},
+  {id:"1217",lpid:"",name:"3421 LJ Phoenician Palms LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:268000,collected:122632,outstanding:192067,monthlyPmt:7214,irr:23.06,ltv:41.67,dscr:1.34,status:"Open",term:60,fundDate:"2024-09",city:"Phoenix, AZ"},
+  {id:"1218",lpid:"",name:"Lj Phoenician Acquisitions LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:232000,collected:106159,outstanding:166267,monthlyPmt:6245,irr:23.06,ltv:64.19,dscr:1.34,status:"Open",term:60,fundDate:"2024-09",city:"Phoenix, AZ"},
+  {id:"1220",lpid:"",name:"Tzadik Mount Rushmore Hotel, LLC",asset:"Hotels & Hospitality",type:"Preferred Equity",vintage:2024,advance:500000,collected:12667,outstanding:0,monthlyPmt:12667,irr:19.74,ltv:50.16,dscr:2.21,status:"Closed",term:60,fundDate:"2024-10",city:""},
+  {id:"1221",lpid:"",name:"1673 Woodbine Portfolio LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:100000,collected:38851,outstanding:84615,monthlyPmt:2428,irr:24.53,ltv:72.31,dscr:1.2,status:"Open",term:52,fundDate:"2024-10",city:""},
+  {id:"1225",lpid:"",name:"Tzadik Hidden Hills Apartments, LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2024,advance:800000,collected:213033,outstanding:660000,monthlyPmt:30433,irr:23.13,ltv:60.63,dscr:1.37,status:"Open",term:20,fundDate:"2024-11",city:""},
+  {id:"1229",lpid:"",name:"938 South LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:185000,collected:58121,outstanding:154164,monthlyPmt:4471,irr:22.48,ltv:73.83,dscr:1.15,status:"Open",term:60,fundDate:"2025-01",city:""},
+  {id:"1230",lpid:"",name:"TH Ravena LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:149000,collected:62953,outstanding:108445,monthlyPmt:4843,irr:23.35,ltv:55.02,dscr:1.27,status:"Open",term:32,fundDate:"2025-01",city:""},
+  {id:"1231",lpid:"",name:"810 Mill LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:70000,collected:25783,outstanding:54833,monthlyPmt:1983,irr:26.26,ltv:79.49,dscr:1.15,status:"Open",term:60,fundDate:"2025-01",city:""},
+  {id:"1234",lpid:"",name:"CIG Manager 198, LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:660000,collected:795821,outstanding:0,monthlyPmt:17765,irr:25.1,ltv:47.9,dscr:1.21,status:"Closed",term:24,fundDate:"2025-02",city:""},
+  {id:"1235",lpid:"",name:"296 Manager Lucas Creek LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:645000,collected:836680,outstanding:0,monthlyPmt:14996,irr:25.0,ltv:79.03,dscr:1.04,status:"Closed",term:60,fundDate:"2025-02",city:""},
+  {id:"1236",lpid:"",name:"CIG Manager 115 LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:217000,collected:273610,outstanding:0,monthlyPmt:9142,irr:25.2,ltv:51.44,dscr:1.19,status:"Closed",term:18,fundDate:"2025-02",city:""},
+  {id:"1237",lpid:"",name:"CIG Manager 115 LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:825000,collected:1017351,outstanding:0,monthlyPmt:17256,irr:25.2,ltv:53.58,dscr:1.19,status:"Closed",term:60,fundDate:"2025-02",city:""},
+  {id:"1238",lpid:"",name:"CIG Manager 215 LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:395000,collected:480771,outstanding:0,monthlyPmt:22087,irr:25.0,ltv:67.84,dscr:1.11,status:"Closed",term:12,fundDate:"2025-02",city:""},
+  {id:"1240",lpid:"",name:"Magnolia Park LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:750000,collected:840076,outstanding:0,monthlyPmt:20000,irr:23.0,ltv:61.1,dscr:1.31,status:"Closed",term:60,fundDate:"2025-03",city:""},
+  {id:"1241",lpid:"",name:"4601 High Street II LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:1400000,collected:1578077,outstanding:0,monthlyPmt:42817,irr:23.123,ltv:50.54,dscr:1.31,status:"Closed",term:48,fundDate:"2025-03",city:""},
+  {id:"1244",lpid:"",name:"LJ Tempe Buttes LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:375000,collected:140594,outstanding:289063,monthlyPmt:12781,irr:22.3,ltv:62.89,dscr:1.2,status:"Open",term:24,fundDate:"2025-03",city:"Tempe, AZ"},
+  {id:"1245",lpid:"",name:"4400 Gaston LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:259800,collected:80733,outstanding:212170,monthlyPmt:7339,irr:26.9,ltv:69.03,dscr:1.37,status:"Open",term:60,fundDate:"2025-04",city:"Dallas, TX"},
+  {id:"1246",lpid:"",name:"Blue Mountain Property Group LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:148000,collected:45991,outstanding:120867,monthlyPmt:4181,irr:26.09,ltv:58.4,dscr:1.17,status:"Open",term:60,fundDate:"2025-04",city:""},
+  {id:"1249",lpid:"",name:"1200 Louise Street LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:145000,collected:41494,outstanding:119999,monthlyPmt:4149,irr:24.99,ltv:63.97,dscr:1.21,status:"Open",term:58,fundDate:"2025-05",city:""},
+  {id:"1250",lpid:"",name:"Towne Property Co., LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:245000,collected:243934,outstanding:0,monthlyPmt:24557,irr:22.97,ltv:72.52,dscr:1.24,status:"Closed",term:11,fundDate:"2025-05",city:""},
+  {id:"1252",lpid:"",name:"Golden Clinton LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:55000,collected:34815,outstanding:25300,monthlyPmt:3868,irr:23.2,ltv:78.26,dscr:1.17,status:"Open",term:15,fundDate:"2025-06",city:""},
+  {id:"1253",lpid:"",name:"18th Ave Urban Renewal LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:240000,collected:139590,outstanding:124800,monthlyPmt:15510,irr:23.2,ltv:64.08,dscr:1.22,status:"Open",term:15,fundDate:"2025-06",city:""},
+  {id:"1254",lpid:"",name:"Golden Orange LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:280000,collected:125370,outstanding:187600,monthlyPmt:13930,irr:23.2,ltv:68.14,dscr:1.22,status:"Open",term:15,fundDate:"2025-06",city:""},
+  {id:"1255",lpid:"",name:"Golden Avenue LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:230000,collected:115230,outstanding:140300,monthlyPmt:12803,irr:23.2,ltv:67.95,dscr:1.21,status:"Open",term:15,fundDate:"2025-06",city:""},
+  {id:"1256",lpid:"",name:"Golden Summit LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:175000,collected:87609,outstanding:106750,monthlyPmt:9734,irr:23.2,ltv:68.43,dscr:1.22,status:"Open",term:15,fundDate:"2025-06",city:""},
+  {id:"1257",lpid:"",name:"Golden Union LLC",asset:"Multifamily",type:"Cash Flow Assignment",vintage:2025,advance:270000,collected:142358,outstanding:156600,monthlyPmt:15818,irr:23.2,ltv:63.62,dscr:1.26,status:"Open",term:15,fundDate:"2025-06",city:""},
+  {id:"1280",lpid:"",name:"Lilly El Paso Investments LLC",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:470000,collected:56425,outstanding:431174,monthlyPmt:14849,irr:24.1,ltv:58.89,dscr:1.37,status:"Open",term:46,fundDate:"2025-11",city:"El Paso, TX"},
+  {id:"1279",lpid:"",name:"May Lin Apartment Portfolio",asset:"Multifamily",type:"Preferred Equity",vintage:2025,advance:500000,collected:33333,outstanding:500000,monthlyPmt:8333,irr:21.4,ltv:57.85,dscr:1.17,status:"Open",term:12,fundDate:"2025-11",city:""},
+];
+
+// ── DEAL PHOTOS — pulled from /images/{dealId}.jpg folder ────────────────
+// To add a photo: save image as images/{dealId}.jpg next to index.html
+// Deals with known photos (from uploaded memos):
+const PHOTO_MAP = {
+  "1275": "images/1275.png",
+  "1127": "images/1127.png",
+  "1184": "images/1184.png",
+  "1188": "images/1188.png",
+  "1147": "images/1147.png",
+  "jax_mf": "images/jax_mf.png",
+  "atl_sfr": "images/atl_sfr.png",
+  "1154": "images/1154.png",
+  "1099": "images/1099.png",
+  "1190": "images/1190.png",
+  "1183": "images/1183.png",
+  "1243": "images/1243.png",
+  "1245": "images/1245.png",
+  "1246": "images/1246.png",
+  "1249": "images/1249.png",
+  "1257": "images/1257.png",
+  "1252": "images/1252.png",
+  "1253": "images/1253.png",
+  "1254": "images/1254.png",
+  "1255": "images/1255.png",
+  "1256": "images/1256.png",
+  "1260": "images/1260.png",
+  "1262": "images/1262.png",
+  "1263": "images/1263.png",
+  "1268": "images/1268.png",
+  "1269": "images/1269.png",
+  "1270": "images/1270.png",
+  "1272": "images/1272.png",
+  "1273": "images/1273.png",
+  "1235": "images/1235.png",
+  "1238": "images/1238.png",
+  "1244": "images/1244.png",
+  "1278": "images/1278.png",
+};
+
+// ── DEAL PHOTOS (runtime uploads — overrides folder) ──────────────────────
+const DEAL_PHOTOS = {};
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let filtered=[...RAW], sortKey='advance', sortDir=-1, page=1, selDeal=null;
+const PP=20;
+const fmt=v=>v>=1e6?`$${(v/1e6).toFixed(2)}M`:v>=1e3?`$${(v/1e3).toFixed(0)}K`:`$${v.toFixed(0)}`;
+const pct=v=>`${v.toFixed(1)}%`;
+const AICO={'Multifamily':'🏢','Hotels & Hospitality':'🏨','SFR':'🏠','Self-Storage':'📦','Mixed Use':'🏗️','Manufactured Housing':'🏡'};
+const ACOL={'Multifamily':'#7B5EA7','Hotels & Hospitality':'#C9A84C','SFR':'#2ECC71','Self-Storage':'#3498DB','Mixed Use':'#E67E22','Manufactured Housing':'#E74C3C'};
+const TCOL={'Preferred Equity':'#7B5EA7','Cash Flow Assignment':'#C9A84C','Revenue Assignment':'#3498DB'};
+
+// ── ONE-PAGER (instant, no API) ───────────────────────────────────────────
+function openOP(deal) {
+  selDeal=deal;
+  document.querySelectorAll('tbody tr').forEach(r=>r.classList.remove('sel'));
+  const row=document.querySelector(`tr[data-id="${deal.id}"]`);
+  if(row) row.classList.add('sel');
+  const panel=document.getElementById('opPanel');
+  panel.style.display='block';
+  panel.className='op';
+
+  const memo=MEMO[deal.lpid]||MEMO[deal.id]||null;
+  const m=memo||{};
+  const city=m.city||deal.city||'—';
+  const desc=m.desc||`${deal.name} is a ${deal.asset.toLowerCase()} investment structured as ${deal.type}, funded ${deal.fundDate} with a ${deal.term}-month term.`;
+  const collPct=Math.min((deal.collected/deal.advance*100),100).toFixed(0);
+  const isDQ=deal.asset.includes('Hotel')&&deal.status==='Open';
+  const statusColor=deal.status==='Closed'?'#8A9BB8':isDQ?'#E74C3C':'#2ECC71';
+  const statusLabel=deal.status==='Closed'?'Closed':isDQ?'Watch':'Performing';
+
+  // Property photos mapped from uploaded memo PDFs
+  const PHOTOS = {
+    "1275": "https://i.imgur.com/placeholder1.jpg", // will be replaced below
+  };
+
+  // Photo: runtime upload takes priority, then /images/ folder
+  const photoSrc = DEAL_PHOTOS[deal.id] || DEAL_PHOTOS[deal.lpid]
+    || PHOTO_MAP[deal.id] || PHOTO_MAP[deal.lpid] || null;
+  const photoHTML = photoSrc
+    ? `<img src="${photoSrc}" style="width:100%;height:100%;object-fit:cover" alt="Property photo"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+       <div style="display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a3e,#2d2060);gap:6px">
+         <span style="font-size:48px">${AICO[deal.asset]||'🏢'}</span>
+         <span style="font-size:10px;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">${city} · ${deal.asset}</span>
+       </div>`
+    : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a3e,#2d2060);gap:6px">
+         <span style="font-size:48px">${AICO[deal.asset]||'🏢'}</span>
+         <span style="font-size:10px;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">${city} · ${deal.asset}</span>
+       </div>`;
+
+  // Strengths / risks
+  const s1=m.strength1||`Projected IRR of ${deal.irr}% with DSCR of ${deal.dscr}x`;
+  const s2=m.strength2||`Conservative CLTV of ${deal.ltv}% provides strong equity buffer`;
+  const r1=m.risk1||`Market and operational risk inherent to ${deal.asset} assets`;
+  const r2=m.risk2||'Revenue sensitivity to macro conditions';
+  const mit1=m.mitigant1||'Cash reserve requirement and PG protections in place';
+  const mit2=m.mitigant2||'Fully amortizing structure with Nectar as servicer';
+
+  // Investment details
+  const details=[
+    {l:'Contract Type',v:deal.type},
+    {l:'Advance Amount',v:fmt(deal.advance)},
+    {l:'Monthly Payment',v:fmt(deal.monthlyPmt)},
+    {l:'Term',v:`${deal.term} months`},
+    {l:'Use of Funds',v:m.useOfFunds||'Acquisitions and liquidity'},
+    {l:'Protections',v:'PG, Right to Sell'},
+    {l:'Amortization',v:'Fully Amortizing'},
+    {l:'Servicer',v:'Nectar'},
+  ];
+
+  // Payment history
+  const [yr,mo]=deal.fundDate.split('-').map(Number);
+  const now=new Date(2026,2);
+  const pmts=[];
+  let running=0;
+  for(let i=0;i<Math.min(deal.term,36);i++){
+    const dt=new Date(yr,mo-1+i);
+    if(dt>now) break;
+    running+=deal.monthlyPmt;
+    pmts.push({month:dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'}),amount:deal.monthlyPmt,paid:running<=deal.collected+deal.monthlyPmt*0.5});
+  }
+  const last6=pmts.slice(-6).reverse();
+
+  const hasMemo=!!memo;
+
+  panel.innerHTML=`
+    <div class="op-top">
+      <div class="op-logo">nectar</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${hasMemo?`<span style="background:#f0edfb;color:#7B5EA7;font-size:8px;font-weight:700;padding:2px 6px;border-radius:10px">📄 MEMO</span>`:''}
+        <span style="font-size:9px;color:#aaa;font-weight:600">ID ${deal.id}</span>
+        <button class="op-x" onclick="closeOP()">✕</button>
+      </div>
+    </div>
+
+    <div class="op-photo">${photoHTML}</div>
+
+    <div class="op-hb">
+      <div class="op-title">${city!=='—'?city:deal.name} | ${deal.asset}</div>
+      <div class="op-sub">${desc}</div>
+      <div class="op-meta">Funded ${deal.fundDate} · ${deal.term}-month term · <span style="color:${statusColor};font-weight:700">${statusLabel}</span>${m.yearBuilt?' · Built '+m.yearBuilt:''}</div>
+    </div>
+
+    <div class="op-mbar">
+      <div><div class="op-ml">DSCR</div><div class="op-mv gold">${deal.dscr}x</div></div>
+      <div><div class="op-ml">Total LTV</div><div class="op-mv white">${pct(deal.ltv)}</div></div>
+      <div><div class="op-ml">Proj. IRR</div><div class="op-mv grn">${pct(deal.irr)}</div></div>
+    </div>
+
+    <div class="op-body">
+
+      <div class="op-sec">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+          <div><div style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Advance</div><div style="font-family:'DM Serif Display',serif;font-size:17px;color:#1a1a2e">${fmt(deal.advance)}</div></div>
+          <div><div style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Collected</div><div style="font-family:'DM Serif Display',serif;font-size:17px;color:#27ae60">${fmt(deal.collected)} <span style="font-size:10px;color:#aaa">(${collPct}%)</span></div></div>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${collPct}%"></div></div>
+        <div style="font-size:9px;color:#aaa;margin-top:3px">${deal.status==='Open'?`${fmt(deal.outstanding)} outstanding · ${fmt(deal.monthlyPmt)}/mo`:'✓ Fully repaid'}</div>
+      </div>
+
+      <div class="op-sec">
+        <div class="op-st">Deal Highlights</div>
+        <div class="op-2col">
+          <div class="op-card">
+            <div class="op-ct">Why We Like This Deal</div>
+            <ul>
+              <li><b>${s1.split(' ').slice(0,3).join(' ')}</b> — ${s1}</li>
+              <li><b>${s2.split(' ').slice(0,3).join(' ')}</b> — ${s2}</li>
+            </ul>
+          </div>
+          <div class="op-card">
+            <div class="op-ct">Risks & Mitigation</div>
+            <ul>
+              <li><b>Risk</b> — ${r1}<br><span style="color:#7B5EA7;font-size:9px">↳ ${mit1}</span></li>
+              <li><b>Risk</b> — ${r2}<br><span style="color:#7B5EA7;font-size:9px">↳ ${mit2}</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="op-sec">
+        <div class="op-st">Investment Details</div>
+        <div class="op-card">${details.map(d=>`<div class="op-row"><span>${d.l}</span><span>${d.v}</span></div>`).join('')}</div>
+      </div>
+
+      ${m.annualNOI||m.annualRev?`
+      <div class="op-sec">
+        <div class="op-st">Underwriting</div>
+        <div class="op-card">
+          ${m.annualNOI?`<div class="op-row"><span>Underwritten Annual NOI</span><span>${fmt(m.annualNOI)}</span></div>`:''}
+          ${m.annualRev?`<div class="op-row"><span>Underwritten Annual Revenue</span><span>${fmt(m.annualRev)}</span></div>`:''}
+          ${m.numUnits?`<div class="op-row"><span>Units Underwritten</span><span>${m.numUnits}</span></div>`:''}
+        </div>
+      </div>`:''}
+
+      <div class="op-sec">
+        <div class="op-st">Payment History <span style="font-size:8px;color:#aaa;font-weight:400;text-transform:none">(last 6 months)</span></div>
+        <table class="op-pmt">
+          <thead><tr><th>Month</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>${last6.map(p=>`<tr><td>${p.month}</td><td style="font-family:monospace">${fmt(p.amount)}</td><td><span class="${p.paid?'paid':'unpaid'}">${p.paid?'Paid':'Open'}</span></td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="op-foot">CONFIDENTIAL — RE Nectar Inc. &nbsp;|&nbsp; <a href="mailto:invest@renectar.com">invest@renectar.com</a></div>`;
+}
+
+function closeOP(){
+  document.getElementById('opPanel').style.display='none';
+  document.querySelectorAll('tbody tr').forEach(r=>r.classList.remove('sel'));
+  selDeal=null;
+}
+
+// ── FILTERS ───────────────────────────────────────────────────────────────
+function applyFilters(){
+  const a=document.getElementById('fAsset').value, s=document.getElementById('fStatus').value,
+        t=document.getElementById('fType').value, v=document.getElementById('fVintage').value;
+  filtered=RAW.filter(d=>{
+    const am=a==='all'||(a==='Hotels'?d.asset.includes('Hotel'):d.asset.includes(a));
+    return am&&(s==='all'||d.status===s)&&(t==='all'||d.type===t)&&(v==='all'||d.vintage===+v);
+  });
+  page=1; renderAll();
+}
+function renderAll(){renderKPIs();renderCharts();renderScenario();renderTable();renderCF();}
+
+function renderKPIs(){
+  const open=filtered.filter(d=>d.status==='Open');
+  const td=filtered.reduce((s,d)=>s+d.advance,0),tc=filtered.reduce((s,d)=>s+d.collected,0),
+        to=open.reduce((s,d)=>s+d.outstanding,0),ai=open.length?open.reduce((s,d)=>s+d.irr,0)/open.length:0,
+        ad=open.filter(d=>d.dscr>0).reduce((s,d,_,a)=>s+d.dscr/a.length,0),
+        al=open.filter(d=>d.ltv>0).reduce((s,d,_,a)=>s+d.ltv/a.length,0);
+  document.getElementById('kD').textContent=fmt(td);
+  document.getElementById('kDn').textContent=`${filtered.length} deals (${open.length} open)`;
+  document.getElementById('kC').textContent=fmt(tc);
+  document.getElementById('kCp').textContent=pct(tc/td*100)+' of deployed';
+  document.getElementById('kO').textContent=fmt(to);
+  document.getElementById('kOp').textContent=pct(to/(open.reduce((s,d)=>s+d.advance,0)||1)*100)+' of open book';
+  document.getElementById('kI').textContent=pct(ai);
+  document.getElementById('kDS').textContent=ad.toFixed(2)+'x';
+  document.getElementById('kLTV').textContent=pct(al);
+}
+
+let ch={};
+const dc={color:'#8A9BB8',plugins:{legend:{labels:{color:'#8A9BB8',font:{family:'DM Sans',size:10},boxWidth:10}}},scales:{x:{ticks:{color:'#8A9BB8',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8A9BB8',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}}};
+function dch(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
+
+function renderCharts(){
+  const ag={};filtered.forEach(d=>{ag[d.asset]=(ag[d.asset]||0)+d.advance;});
+  dch('cAsset');ch['cAsset']=new Chart(document.getElementById('cAsset'),{type:'doughnut',data:{labels:Object.keys(ag),datasets:[{data:Object.values(ag),backgroundColor:Object.keys(ag).map(k=>ACOL[k]||'#555'),borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{position:'right',labels:{color:'#8A9BB8',font:{size:9},boxWidth:8,padding:6}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},cutout:'65%'}});
+  const vg={};filtered.forEach(d=>{vg[d.vintage]=(vg[d.vintage]||0)+d.advance;});const vY=Object.keys(vg).sort();
+  dch('cVintage');ch['cVintage']=new Chart(document.getElementById('cVintage'),{type:'bar',data:{labels:vY,datasets:[{data:vY.map(y=>vg[y]),backgroundColor:'#7B5EA7',borderRadius:4,borderSkipped:false}]},options:{...dc,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},scales:{x:dc.scales.x,y:{...dc.scales.y,ticks:{...dc.scales.y.ticks,callback:v=>fmt(v)}}}}});
+  const ia={},ca={};filtered.filter(d=>d.status==='Open').forEach(d=>{ia[d.asset]=(ia[d.asset]||0)+d.irr;ca[d.asset]=(ca[d.asset]||0)+1;});const iL=Object.keys(ia),iV=iL.map(k=>ia[k]/ca[k]);
+  dch('cIRR');ch['cIRR']=new Chart(document.getElementById('cIRR'),{type:'bar',data:{labels:iL.map(l=>l.replace('& Hospitality','')),datasets:[{data:iV,backgroundColor:iL.map(k=>ACOL[k]||'#555'),borderRadius:4,borderSkipped:false}]},options:{...dc,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${pct(c.raw)}`}}},scales:{y:{ticks:{color:'#8A9BB8',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{color:'#8A9BB8',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'},min:15,max:35}}}});
+  const tg={};filtered.forEach(d=>{tg[d.type]=(tg[d.type]||0)+d.advance;});
+  dch('cType');ch['cType']=new Chart(document.getElementById('cType'),{type:'doughnut',data:{labels:Object.keys(tg),datasets:[{data:Object.values(tg),backgroundColor:Object.keys(tg).map(k=>TCOL[k]||'#555'),borderWidth:0,hoverOffset:4}]},options:{plugins:{legend:{position:'right',labels:{color:'#8A9BB8',font:{size:9},boxWidth:8,padding:6}},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},cutout:'65%'}});
+  const aK=[...new Set(filtered.map(d=>d.asset))],cA={},oA={},pA={};aK.forEach(k=>{cA[k]=0;oA[k]=0;pA[k]=0;});filtered.forEach(d=>{cA[d.asset]+=d.collected;if(d.status==='Open'){oA[d.asset]+=d.outstanding;pA[d.asset]+=d.outstanding*(d.irr/100);}});
+  dch('cStack');ch['cStack']=new Chart(document.getElementById('cStack'),{type:'bar',data:{labels:aK.map(l=>l.replace('& Hospitality','')),datasets:[{label:'Collected',data:aK.map(k=>cA[k]),backgroundColor:'#2ECC71',stack:'a'},{label:'Outstanding',data:aK.map(k=>oA[k]),backgroundColor:'#3498DB',stack:'a'},{label:'Proj. Income',data:aK.map(k=>pA[k]),backgroundColor:'#C9A84C',borderRadius:4,stack:'a'}]},options:{...dc,plugins:{legend:{labels:{color:'#8A9BB8',font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.raw)}`}}},scales:{x:dc.scales.x,y:{...dc.scales.y,stacked:true,ticks:{...dc.scales.y.ticks,callback:v=>fmt(v)}}}}});
+}
+
+function setScen(s,btn){
+  document.querySelectorAll('.s-pill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');
+  const SC={bear:{irr:15.29,c:'#E74C3C',l:'30¢/$1 on non-performers'},base:{irr:17.53,c:'#F39C12',l:'Breakeven on non-performers'},bull:{irr:24.38,c:'#2ECC71',l:'Full + 10% penalty'}};
+  const sc=SC[s],sp=sc.irr-18.26;
+  document.getElementById('sActive').innerHTML=`<div class="s-ml">Selected Scenario</div><div class="s-mv" style="color:${sc.c}">${pct(sc.irr)}</div><div style="font-size:9px;color:var(--dim);margin-top:3px">${sc.l}</div><div style="font-size:9px;margin-top:5px;color:${sp>=0?'#2ECC71':'#E74C3C'}">${sp>=0?'+':''}${pct(sp)} vs realized</div>`;
+  document.getElementById('sGrid').innerHTML=`<div class="s-met"><div class="s-ml">Methodology</div><div style="font-size:10px;color:${sc.c};margin-top:5px;line-height:1.6">5% loss reserve on performing book. ${sc.l}.</div></div><div class="s-met"><div class="s-ml">Blended IRR</div><div class="s-mv" style="color:${sc.c}">${pct(sc.irr)}</div></div><div class="s-met"><div class="s-ml">vs Realized (18.26%)</div><div class="s-mv" style="color:${sp>=0?'#2ECC71':'#E74C3C'}">${sp>=0?'+':''}${pct(sp)}</div></div><div class="s-met"><div class="s-ml">Scenario Range</div><div class="s-mv" style="color:var(--accent)">9.09%</div><div style="font-size:9px;color:var(--dim);margin-top:3px">15.29% → 24.38%</div></div>`;
+}
+function renderScenario(){setScen('base',document.querySelector('.s-pill.base'));}
+
+function srt(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}renderTable();}
+function renderTable(){
+  const fns={id:d=>+d.id||0,name:d=>d.name,asset:d=>d.asset,city:d=>d.city,type:d=>d.type,vintage:d=>d.vintage,advance:d=>d.advance,collected:d=>d.collected,outstanding:d=>d.outstanding,irr:d=>d.irr,ltv:d=>d.ltv,dscr:d=>d.dscr,status:d=>d.status};
+  const sorted=[...filtered].sort((a,b)=>{const va=fns[sortKey]?.(a)??0,vb=fns[sortKey]?.(b)??0;return typeof va==='string'?va.localeCompare(vb)*sortDir:(va-vb)*sortDir;});
+  const total=sorted.length,pages=Math.ceil(total/PP),sl=sorted.slice((page-1)*PP,page*PP);
+  document.getElementById('tCount').textContent=`${total} positions — click any row`;
+  const hasMemoIndicator=d=>MEMO[d.lpid]||MEMO[d.id]?'<span style="color:#7B5EA7;font-size:9px;margin-right:3px">📄</span>':'';
+  document.getElementById('tBody').innerHTML=sl.map(d=>{
+    const isDQ=d.asset.includes('Hotel')&&d.status==='Open';
+    const p=Math.min(d.irr/40*100,100);
+    const tC=d.type==='Preferred Equity'?'b-pe':d.type==='Cash Flow Assignment'?'b-cfa':'b-ra';
+    const sC=d.status==='Closed'?'b-closed':isDQ?'b-watch':'b-open';
+    const sL=d.status==='Closed'?'Closed':isDQ?'Watch':'Open';
+    const isSel=selDeal&&selDeal.id===d.id;
+    return `<tr data-id="${d.id}" onclick="openOP(RAW.find(r=>r.id==='${d.id}'))" class="${isSel?'sel':''}">
+      <td class="mono dim">${d.id}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${hasMemoIndicator(d)}${d.name}</td>
+      <td class="dim">${d.asset.replace('& Hospitality','')}</td>
+      <td class="dim" style="font-size:10px">${d.city||'—'}</td>
+      <td><span class="badge ${tC}">${d.type.replace(' Assignment','').replace('Preferred ','Pref ')}</span></td>
+      <td class="mono">${d.vintage}</td>
+      <td class="mono">${fmt(d.advance)}</td>
+      <td class="mono" style="color:#2ECC71">${fmt(d.collected)}</td>
+      <td class="mono">${d.status==='Closed'?'—':fmt(d.outstanding)}</td>
+      <td><div class="irr-bar"><div class="irr-tr"><div class="irr-fi" style="width:${p}%"></div></div><span class="mono" style="font-size:10px">${pct(d.irr)}</span></div></td>
+      <td class="mono">${pct(d.ltv)}</td>
+      <td class="mono">${d.dscr>0?d.dscr.toFixed(2)+'x':'—'}</td>
+      <td><span class="badge ${sC}">${sL}</span></td>
+    </tr>`;
+  }).join('');
+  const pg=document.getElementById('pag');
+  pg.innerHTML=`<span class="pg-info">${(page-1)*PP+1}–${Math.min(page*PP,total)} of ${total}</span>`;
+  if(page>1)pg.innerHTML+=`<button class="pg-btn" onclick="goP(${page-1})">← Prev</button>`;
+  for(let i=Math.max(1,page-2);i<=Math.min(pages,page+2);i++)pg.innerHTML+=`<button class="pg-btn ${i===page?'active':''}" onclick="goP(${i})">${i}</button>`;
+  if(page<pages)pg.innerHTML+=`<button class="pg-btn" onclick="goP(${page+1})">Next →</button>`;
+}
+function goP(p){page=p;renderTable();}
+
+function renderCF(){
+  const mA={};filtered.forEach(d=>{const[yr,mo]=d.fundDate.split('-').map(Number);const mP=Math.round(d.collected/(d.monthlyPmt||1));for(let i=0;i<Math.min(mP,36);i++){const dt=new Date(yr,mo-1+i);const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;mA[k]=(mA[k]||0)+(d.monthlyPmt||0);}});
+  const now=new Date(2026,2);const mP2={};filtered.filter(d=>d.status==='Open').forEach(d=>{const m=Math.round(d.outstanding/(d.monthlyPmt||1));for(let i=0;i<Math.min(m,24);i++){const dt=new Date(now.getFullYear(),now.getMonth()+i);const k=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;mP2[k]=(mP2[k]||0)+(d.monthlyPmt||0);}});
+  const aK=Object.keys(mA).sort().slice(-24),pK=Object.keys(mP2).sort().slice(0,24);
+  dch('cCFA');ch['cCFA']=new Chart(document.getElementById('cCFA'),{type:'bar',data:{labels:aK,datasets:[{data:aK.map(k=>mA[k]||0),backgroundColor:'#2ECC71',borderRadius:2}]},options:{...dc,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},scales:{x:{...dc.scales.x,ticks:{...dc.scales.x.ticks,maxRotation:45,maxTicksLimit:12}},y:{...dc.scales.y,ticks:{...dc.scales.y.ticks,callback:v=>fmt(v)}}}}});
+  dch('cCFP');ch['cCFP']=new Chart(document.getElementById('cCFP'),{type:'bar',data:{labels:pK,datasets:[{data:pK.map(k=>mP2[k]||0),backgroundColor:'#C9A84C',borderRadius:2}]},options:{...dc,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)}`}}},scales:{x:{...dc.scales.x,ticks:{...dc.scales.x.ticks,maxRotation:45,maxTicksLimit:12}},y:{...dc.scales.y,ticks:{...dc.scales.y.ticks,callback:v=>fmt(v)}}}}});
+  const allK=[...new Set([...aK,...pK])].sort();const cD={};filtered.forEach(d=>{const[yr,mo]=d.fundDate.split('-').map(Number);const k=`${yr}-${String(mo).padStart(2,'0')}`;cD[k]=(cD[k]||0)+d.advance;});let rD=0,rC=0,rP=0;const cDD=[],cCD=[],cPD=[];allK.forEach(k=>{rD+=(cD[k]||0);rC+=(mA[k]||0);rP+=(mP2[k]||0);cDD.push(rD);cCD.push(rC);cPD.push(k>='2026-03'?rP:0);});
+  dch('cCum');ch['cCum']=new Chart(document.getElementById('cCum'),{type:'line',data:{labels:allK,datasets:[{label:'Cumulative Deployed',data:cDD,borderColor:'#7B5EA7',backgroundColor:'rgba(123,94,167,0.1)',fill:true,tension:0.3,pointRadius:0},{label:'Cumulative Collected',data:cCD,borderColor:'#2ECC71',backgroundColor:'rgba(46,204,113,0.1)',fill:true,tension:0.3,pointRadius:0},{label:'Projected (fwd)',data:cPD,borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,0.1)',fill:true,tension:0.3,pointRadius:0,borderDash:[4,4]}]},options:{...dc,plugins:{legend:{labels:{color:'#8A9BB8',font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.raw)}`}}},scales:{x:{...dc.scales.x,ticks:{...dc.scales.x.ticks,maxRotation:45,maxTicksLimit:16}},y:{...dc.scales.y,ticks:{...dc.scales.y.ticks,callback:v=>fmt(v)}}}}});
+}
+
+function setView(v,btn){
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('vSum').style.display=v==='summary'?'block':'none';
+  document.getElementById('vSumScen').style.display=v==='summary'?'block':'none';
+  document.getElementById('vDeals').style.display=v==='deals'?'block':'none';
+  document.getElementById('vCF').style.display=v==='cashflow'?'block':'none';
+  if(v==='cashflow')renderCF();
+}
+
+applyFilters();
+</script>
+</body>
+</html>
